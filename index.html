@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: system-ui; padding: 20px; }
+        button { background: #31b545; color: white; border: none; padding: 10px 20px; border-radius: 8px; }
+        input { padding: 10px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>🎁 Мой вишлист</h1>
+    <input type="text" id="itemName" placeholder="Название подарка">
+    <input type="text" id="itemPrice" placeholder="Цена">
+    <button onclick="addItem()">➕ Добавить</button>
+    <div id="list"></div>
+    <button onclick="sendToBot()">💾 Сохранить в боте</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        let wishlist = [];
+
+        function render() {
+            const container = document.getElementById('list');
+            container.innerHTML = wishlist.map((item, i) => `
+                <div style="border:1px solid #ccc; margin:10px 0; padding:10px; border-radius:8px">
+                    <b>${item.name}</b> - ${item.price} ₽
+                    <button onclick="removeItem(${i})" style="background:red; margin-left:10px">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        function addItem() {
+            const name = document.getElementById('itemName').value;
+            const price = document.getElementById('itemPrice').value;
+            if (name) {
+                wishlist.push({ name, price });
+                render();
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+            }
+        }
+
+        function removeItem(i) {
+            wishlist.splice(i, 1);
+            render();
+        }
+
+        function sendToBot() {
+            tg.sendData(JSON.stringify({ wishlist }));
+            alert('Отправлено боту!');
+        }
+    </script>
+</body>
+</html>
