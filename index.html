@@ -6,19 +6,13 @@
     <title>Мой вишлист</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f2f2f7;
             padding: 20px;
             padding-bottom: 40px;
         }
-
         h1 {
             font-size: 32px;
             font-weight: 700;
@@ -28,7 +22,6 @@
             align-items: center;
             gap: 8px;
         }
-
         .subtitle {
             color: #8e8e93;
             font-size: 14px;
@@ -36,7 +29,6 @@
             border-left: 3px solid #007aff;
             padding-left: 12px;
         }
-
         .add-section {
             background: white;
             border-radius: 16px;
@@ -44,7 +36,6 @@
             margin-bottom: 24px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         }
-
         .add-section input {
             width: 100%;
             padding: 14px 16px;
@@ -53,20 +44,11 @@
             font-size: 16px;
             margin-bottom: 12px;
             background: #f9f9fb;
-            transition: border-color 0.2s;
         }
-
         .add-section input:focus {
             outline: none;
             border-color: #007aff;
         }
-
-        .button-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
         button {
             background: #007aff;
             color: white;
@@ -76,34 +58,17 @@
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.05s;
         }
-
-        button:active {
-            transform: scale(0.97);
-        }
-
         .delete-btn {
             background: #ff3b30;
             padding: 8px 16px;
             font-size: 14px;
         }
-
-        .save-btn {
-            background: #34c759;
-            width: 100%;
-            padding: 16px;
-            font-size: 17px;
-            margin-top: 8px;
-            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
-        }
-
         .loading {
             text-align: center;
             padding: 40px;
             color: #8e8e93;
         }
-
         .card {
             background: white;
             border-radius: 16px;
@@ -113,29 +78,10 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s;
         }
-
-        .card:active {
-            transform: scale(0.99);
-        }
-
-        .card-info {
-            flex: 1;
-        }
-
-        .card-name {
-            font-weight: 600;
-            font-size: 17px;
-            color: #000;
-            margin-bottom: 4px;
-        }
-
-        .card-price {
-            color: #8e8e93;
-            font-size: 14px;
-        }
-
+        .card-info { flex: 1; }
+        .card-name { font-weight: 600; font-size: 17px; margin-bottom: 4px; }
+        .card-price { color: #8e8e93; font-size: 14px; }
         .empty-state {
             text-align: center;
             color: #8e8e93;
@@ -144,13 +90,7 @@
             border-radius: 16px;
             margin-top: 20px;
         }
-
-        .empty-state span {
-            font-size: 48px;
-            display: block;
-            margin-bottom: 12px;
-        }
-
+        .empty-state span { font-size: 48px; display: block; margin-bottom: 12px; }
         .error {
             background: #ffe5e5;
             color: #ff3b30;
@@ -159,203 +99,134 @@
             margin-bottom: 16px;
             font-size: 14px;
             text-align: center;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <h1>
-        <span>🎁</span> Мой вишлист
-    </h1>
+    <h1><span>🎁</span> Мой вишлист</h1>
     <div class="subtitle">Подарки, которые я хочу получить</div>
-
-    <div id="errorMsg" class="error" style="display: none;"></div>
-
+    
+    <div id="errorMsg" class="error"></div>
+    
     <div class="add-section">
-        <input type="text" id="itemName" placeholder="Название подарка (например, AirPods)">
-        <input type="text" id="itemPrice" placeholder="Цена (например, 15000)">
-        <input type="text" id="itemLink" placeholder="Ссылка на подарок (необязательно)">
-        <div class="button-group">
-            <button onclick="addGift()" style="flex: 1;">➕ Добавить подарок</button>
-        </div>
+        <input type="text" id="itemName" placeholder="Название подарка">
+        <input type="text" id="itemPrice" placeholder="Цена">
+        <input type="text" id="itemLink" placeholder="Ссылка (необязательно)">
+        <button onclick="addGift()" style="width: 100%;">➕ Добавить подарок</button>
     </div>
-
-    <div id="list">
-        <div class="loading">Загрузка вишлиста...</div>
-    </div>
+    
+    <div id="list"><div class="loading">Загрузка вишлиста...</div></div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         
-        // Получаем ID пользователя Telegram
         const userId = tg.initDataUnsafe?.user?.id;
-        
-        // Базовый URL API
         const API_BASE = 'https://birthdaybot-production-2460.up.railway.app';
         
         let wishlist = [];
-
-        // Проверка, что пользователь авторизован
+        
         if (!userId) {
-            document.getElementById('errorMsg').innerText = 'Ошибка: не удалось определить пользователя Telegram';
-            document.getElementById('errorMsg').style.display = 'block';
+            showError('Ошибка: не удалось определить пользователя. Открой Mini App через Telegram.');
         } else {
             loadWishlist();
         }
-
-        function showError(message) {
+        
+        function showError(msg) {
             const errorDiv = document.getElementById('errorMsg');
-            errorDiv.innerText = message;
+            errorDiv.innerText = msg;
             errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 3000);
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
         }
-
-        // Загрузка вишлиста с сервера
+        
         async function loadWishlist() {
             try {
                 const response = await fetch(`${API_BASE}/wishlist/${userId}`);
-                
-                if (!response.ok) {
-                    throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
-                }
-                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 wishlist = data.map(item => ({
                     id: item.id,
                     name: item.gift_name,
                     price: item.price || 'не указана',
-                    link: item.gift_link || '',
-                    visibility: item.visibility || 'all'
+                    link: item.gift_link || ''
                 }));
-                
                 render();
             } catch (error) {
                 console.error('Ошибка загрузки:', error);
-                renderError('Не удалось загрузить вишлист. Попробуйте позже.');
+                renderError('Не удалось загрузить вишлист. Проверь интернет или API.');
             }
         }
-
-        // Добавление подарка
+        
         async function addGift() {
-            const nameInput = document.getElementById('itemName');
-            const priceInput = document.getElementById('itemPrice');
-            const linkInput = document.getElementById('itemLink');
+            const name = document.getElementById('itemName').value.trim();
+            const price = document.getElementById('itemPrice').value.trim();
+            const link = document.getElementById('itemLink').value.trim();
             
-            const name = nameInput.value.trim();
-            const price = priceInput.value.trim();
-            const link = linkInput.value.trim();
-            
-            if (name === '') {
+            if (!name) {
                 alert('Введите название подарка');
-                nameInput.focus();
                 return;
             }
             
-            const giftData = {
-                gift_name: name,
-                price: price ? parseInt(price) : 0,
-                visibility: "all"
-            };
-            
-            if (link) {
-                giftData.gift_link = link;
-            }
+            const giftData = { gift_name: name, price: price ? parseInt(price) : 0, visibility: "all" };
+            if (link) giftData.gift_link = link;
             
             try {
                 const response = await fetch(`${API_BASE}/wishlist/${userId}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(giftData)
                 });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
-                if (!response.ok) {
-                    throw new Error(`Ошибка ${response.status}`);
-                }
-                
-                // Очищаем поля
-                nameInput.value = '';
-                priceInput.value = '';
-                linkInput.value = '';
-                
-                // Перезагружаем список
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+                document.getElementById('itemLink').value = '';
                 await loadWishlist();
-                
             } catch (error) {
                 console.error('Ошибка добавления:', error);
                 showError('Не удалось добавить подарок');
             }
         }
-
-        // Удаление подарка
+        
         async function removeItem(index) {
             const item = wishlist[index];
-            if (!item || !item.id) return;
-            
+            if (!item?.id) return;
             if (!confirm(`Удалить "${item.name}"?`)) return;
             
             try {
-                const response = await fetch(`${API_BASE}/wishlist/${userId}/${item.id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Ошибка ${response.status}`);
-                }
-                
+                const response = await fetch(`${API_BASE}/wishlist/${userId}/${item.id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 await loadWishlist();
-                
             } catch (error) {
                 console.error('Ошибка удаления:', error);
                 showError('Не удалось удалить подарок');
             }
         }
-
+        
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str).replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
+            return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
         }
-
-        function renderError(message) {
-            const container = document.getElementById('list');
-            container.innerHTML = `
-                <div class="empty-state">
-                    <span>⚠️</span>
-                    ${escapeHtml(message)}
-                </div>
-            `;
+        
+        function renderError(msg) {
+            document.getElementById('list').innerHTML = `<div class="empty-state"><span>⚠️</span>${escapeHtml(msg)}</div>`;
         }
-
+        
         function render() {
             const container = document.getElementById('list');
-            
-            if (!wishlist || wishlist.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <span>🎄</span>
-                        Пока нет подарков<br>
-                        Добавьте первый выше
-                    </div>
-                `;
+            if (!wishlist.length) {
+                container.innerHTML = `<div class="empty-state"><span>🎄</span>Пока нет подарков<br>Добавьте первый выше</div>`;
                 return;
             }
-            
-            container.innerHTML = wishlist.map((item, index) => `
+            container.innerHTML = wishlist.map((item, i) => `
                 <div class="card">
                     <div class="card-info">
                         <div class="card-name">${escapeHtml(item.name)}</div>
                         <div class="card-price">${escapeHtml(item.price)} ₽</div>
-                        ${item.link ? `<div style="font-size: 12px; color: #007aff; margin-top: 4px;">🔗 <a href="${escapeHtml(item.link)}" target="_blank" style="color: #007aff; text-decoration: none;">Ссылка</a></div>` : ''}
+                        ${item.link ? `<div style="font-size:12px;margin-top:4px;">🔗 <a href="${escapeHtml(item.link)}" target="_blank">Ссылка</a></div>` : ''}
                     </div>
-                    <button class="delete-btn" onclick="removeItem(${index})">🗑 Удалить</button>
+                    <button class="delete-btn" onclick="removeItem(${i})">🗑 Удалить</button>
                 </div>
             `).join('');
         }
