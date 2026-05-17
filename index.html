@@ -98,6 +98,12 @@
             box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
         }
 
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8e8e93;
+        }
+
         .card {
             background: white;
             border-radius: 16px;
@@ -144,6 +150,16 @@
             display: block;
             margin-bottom: 12px;
         }
+
+        .error {
+            background: #ffe5e5;
+            color: #ff3b30;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -152,28 +168,155 @@
     </h1>
     <div class="subtitle">Подарки, которые я хочу получить</div>
 
+    <div id="errorMsg" class="error" style="display: none;"></div>
+
     <div class="add-section">
         <input type="text" id="itemName" placeholder="Название подарка (например, AirPods)">
-        <input type="text" id="itemPrice" placeholder="Цена (например, 15 000 ₽)">
+        <input type="text" id="itemPrice" placeholder="Цена (например, 15000)">
+        <input type="text" id="itemLink" placeholder="Ссылка на подарок (необязательно)">
         <div class="button-group">
-            <button onclick="addItem()" style="flex: 1;">➕ Добавить подарок</button>
+            <button onclick="addGift()" style="flex: 1;">➕ Добавить подарок</button>
         </div>
     </div>
 
-    <div id="list"></div>
-
-    <button class="save-btn" onclick="sendToBot()">💾 Сохранить вишлист в боте</button>
+    <div id="list">
+        <div class="loading">Загрузка вишлиста...</div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         
+        // Получаем ID пользователя Telegram
+        const userId = tg.initDataUnsafe?.user?.id;
+        
+        // Базовый URL API
+        const API_BASE = 'https://birthdaybot-production-2460.up.railway.app';
+        
         let wishlist = [];
 
-        // Защита от XSS (чтобы нельзя было вставить вредоносный код)
+        // Проверка, что пользователь авторизован
+        if (!userId) {
+            document.getElementById('errorMsg').innerText = 'Ошибка: не удалось определить пользователя Telegram';
+            document.getElementById('errorMsg').style.display = 'block';
+        } else {
+            loadWishlist();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.innerText = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Загрузка вишлиста с сервера
+        async function loadWishlist() {
+            try {
+                const response = await fetch(`${API_BASE}/wishlist/${userId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                wishlist = data.map(item => ({
+                    id: item.id,
+                    name: item.gift_name,
+                    price: item.price || 'не указана',
+                    link: item.gift_link || '',
+                    visibility: item.visibility || 'all'
+                }));
+                
+                render();
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                renderError('Не удалось загрузить вишлист. Попробуйте позже.');
+            }
+        }
+
+        // Добавление подарка
+        async function addGift() {
+            const nameInput = document.getElementById('itemName');
+            const priceInput = document.getElementById('itemPrice');
+            const linkInput = document.getElementById('itemLink');
+            
+            const name = nameInput.value.trim();
+            const price = priceInput.value.trim();
+            const link = linkInput.value.trim();
+            
+            if (name === '') {
+                alert('Введите название подарка');
+                nameInput.focus();
+                return;
+            }
+            
+            const giftData = {
+                gift_name: name,
+                price: price ? parseInt(price) : 0,
+                visibility: "all"
+            };
+            
+            if (link) {
+                giftData.gift_link = link;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/wishlist/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(giftData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Ошибка ${response.status}`);
+                }
+                
+                // Очищаем поля
+                nameInput.value = '';
+                priceInput.value = '';
+                linkInput.value = '';
+                
+                // Перезагружаем список
+                await loadWishlist();
+                
+            } catch (error) {
+                console.error('Ошибка добавления:', error);
+                showError('Не удалось добавить подарок');
+            }
+        }
+
+        // Удаление подарка
+        async function removeItem(index) {
+            const item = wishlist[index];
+            if (!item || !item.id) return;
+            
+            if (!confirm(`Удалить "${item.name}"?`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/wishlist/${userId}/${item.id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Ошибка ${response.status}`);
+                }
+                
+                await loadWishlist();
+                
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+                showError('Не удалось удалить подарок');
+            }
+        }
+
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
+            return String(str).replace(/[&<>]/g, function(m) {
                 if (m === '&') return '&amp;';
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
@@ -181,10 +324,20 @@
             });
         }
 
+        function renderError(message) {
+            const container = document.getElementById('list');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <span>⚠️</span>
+                    ${escapeHtml(message)}
+                </div>
+            `;
+        }
+
         function render() {
             const container = document.getElementById('list');
             
-            if (wishlist.length === 0) {
+            if (!wishlist || wishlist.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <span>🎄</span>
@@ -200,58 +353,11 @@
                     <div class="card-info">
                         <div class="card-name">${escapeHtml(item.name)}</div>
                         <div class="card-price">${escapeHtml(item.price)} ₽</div>
+                        ${item.link ? `<div style="font-size: 12px; color: #007aff; margin-top: 4px;">🔗 <a href="${escapeHtml(item.link)}" target="_blank" style="color: #007aff; text-decoration: none;">Ссылка</a></div>` : ''}
                     </div>
                     <button class="delete-btn" onclick="removeItem(${index})">🗑 Удалить</button>
                 </div>
             `).join('');
-        }
-
-        function addItem() {
-            const nameInput = document.getElementById('itemName');
-            const priceInput = document.getElementById('itemPrice');
-            const name = nameInput.value.trim();
-            const price = priceInput.value.trim();
-            
-            if (name === '') {
-                // Встряхиваем поле ввода
-                nameInput.style.transform = 'shake 0.3s';
-                setTimeout(() => { nameInput.style.transform = ''; }, 300);
-                alert('Введите название подарка');
-                return;
-            }
-            
-            wishlist.push({ 
-                name: name, 
-                price: price || 'не указана' 
-            });
-            render();
-            
-            // Очищаем поля
-            nameInput.value = '';
-            priceInput.value = '';
-            nameInput.focus();
-        }
-
-        function removeItem(index) {
-            wishlist.splice(index, 1);
-            render();
-        }
-
-        function sendToBot() {
-            if (wishlist.length === 0) {
-                alert('Сначала добавьте хотя бы один подарок');
-                return;
-            }
-            
-            const data = {
-                action: 'save_wishlist',
-                wishlist: wishlist,
-                user_id: tg.initDataUnsafe?.user?.id || 'unknown',
-                timestamp: new Date().toISOString()
-            };
-            
-            tg.sendData(JSON.stringify(data));
-            alert(`✅ Отправлено боту ${wishlist.length} подарков!`);
         }
     </script>
 </body>
