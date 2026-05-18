@@ -59,6 +59,7 @@
             font-weight: 500;
             cursor: pointer;
         }
+        button:active { transform: scale(0.97); }
         .delete-btn {
             background: #ff3b30;
             padding: 8px 16px;
@@ -143,18 +144,29 @@
         async function loadWishlist() {
             try {
                 const response = await fetch(`${API_BASE}/wishlist/${userId}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
-                wishlist = data.map(item => ({
-                    id: item.id,
-                    name: item.gift_name,
-                    price: item.price || 'не указана',
-                    link: item.gift_link || ''
-                }));
+                
+                // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: обрабатываем пустой ответ []
+                if (data && Array.isArray(data)) {
+                    wishlist = data.map(item => ({
+                        id: item.id,
+                        name: item.gift_name,
+                        price: item.price || 'не указана',
+                        link: item.gift_link || ''
+                    }));
+                } else {
+                    wishlist = [];
+                }
+                
                 render();
             } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                renderError('Не удалось загрузить вишлист. Проверь интернет или API.');
+                console.error('Ошибка:', error);
+                renderError(`Ошибка: ${error.message}`);
             }
         }
         
@@ -168,7 +180,11 @@
                 return;
             }
             
-            const giftData = { gift_name: name, price: price ? parseInt(price) : 0, visibility: "all" };
+            const giftData = { 
+                gift_name: name, 
+                price: price ? parseInt(price) : 0, 
+                visibility: "all" 
+            };
             if (link) giftData.gift_link = link;
             
             try {
@@ -177,12 +193,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(giftData)
                 });
+                
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
                 document.getElementById('itemLink').value = '';
+                
                 await loadWishlist();
+                
             } catch (error) {
                 console.error('Ошибка добавления:', error);
                 showError('Не удалось добавить подарок');
@@ -195,9 +214,14 @@
             if (!confirm(`Удалить "${item.name}"?`)) return;
             
             try {
-                const response = await fetch(`${API_BASE}/wishlist/${userId}/${item.id}`, { method: 'DELETE' });
+                const response = await fetch(`${API_BASE}/wishlist/${userId}/${item.id}`, { 
+                    method: 'DELETE' 
+                });
+                
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
                 await loadWishlist();
+                
             } catch (error) {
                 console.error('Ошибка удаления:', error);
                 showError('Не удалось удалить подарок');
@@ -206,25 +230,36 @@
         
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+            return String(str).replace(/[&<>]/g, m => 
+                m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'
+            );
         }
         
         function renderError(msg) {
-            document.getElementById('list').innerHTML = `<div class="empty-state"><span>⚠️</span>${escapeHtml(msg)}</div>`;
+            const container = document.getElementById('list');
+            container.innerHTML = `<div class="empty-state"><span>⚠️</span>${escapeHtml(msg)}</div>`;
         }
         
         function render() {
             const container = document.getElementById('list');
-            if (!wishlist.length) {
-                container.innerHTML = `<div class="empty-state"><span>🎄</span>Пока нет подарков<br>Добавьте первый выше</div>`;
+            
+            if (!wishlist || wishlist.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span>🎄</span>
+                        Пока нет подарков<br>
+                        Добавьте первый выше
+                    </div>
+                `;
                 return;
             }
+            
             container.innerHTML = wishlist.map((item, i) => `
                 <div class="card">
                     <div class="card-info">
                         <div class="card-name">${escapeHtml(item.name)}</div>
                         <div class="card-price">${escapeHtml(item.price)} ₽</div>
-                        ${item.link ? `<div style="font-size:12px;margin-top:4px;">🔗 <a href="${escapeHtml(item.link)}" target="_blank">Ссылка</a></div>` : ''}
+                        ${item.link ? `<div style="font-size:12px;margin-top:4px;">🔗 <a href="${escapeHtml(item.link)}" target="_blank" style="color:#007aff;text-decoration:none;">Ссылка</a></div>` : ''}
                     </div>
                     <button class="delete-btn" onclick="removeItem(${i})">🗑 Удалить</button>
                 </div>
