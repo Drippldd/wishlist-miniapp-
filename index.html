@@ -19,22 +19,21 @@
             padding-bottom: 40px;
         }
 
-        /* Бело-оранжевая палитра */
+        /* Оранжевая палитра */
         :root {
             --orange: #FF7A2F;
             --orange-dark: #E55A1F;
             --orange-light: #FFF2E6;
             --orange-soft: #FFE4D6;
             --text-dark: #1A1A1A;
-            --text-gray: #7A7A7A;
-            --text-light: #B0B0B0;
+            --text-gray: #6C6C6C;
+            --text-light: #9A9A9A;
             --border: #F0EBE5;
             --white: #FFFFFF;
-            --shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
-            --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.08);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
 
-        /* Хедер */
         .header {
             margin-bottom: 24px;
         }
@@ -82,11 +81,11 @@
             box-shadow: 0 2px 8px rgba(255, 122, 47, 0.3);
         }
 
-        /* Карточка подарка (как в ohmywishes) */
+        /* КАРТОЧКА КАК НА ohmywishes */
         .gift-card {
             background: var(--white);
-            border-radius: 24px;
-            margin-bottom: 16px;
+            border-radius: 28px;
+            margin-bottom: 20px;
             overflow: hidden;
             box-shadow: var(--shadow);
             transition: all 0.25s ease;
@@ -100,19 +99,19 @@
 
         .gift-card-content {
             display: flex;
-            padding: 16px;
-            gap: 16px;
+            padding: 20px;
+            gap: 20px;
         }
 
         .gift-image {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             background: var(--orange-light);
-            border-radius: 20px;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
+            font-size: 56px;
             flex-shrink: 0;
             overflow: hidden;
         }
@@ -125,43 +124,83 @@
 
         .gift-details {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
 
         .gift-title {
             font-weight: 700;
-            font-size: 18px;
+            font-size: 17px;
             color: var(--text-dark);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            line-height: 1.3;
         }
 
         .gift-price {
             font-weight: 700;
-            font-size: 17px;
+            font-size: 20px;
             color: var(--orange);
-            margin-top: 4px;
+            margin: 8px 0 6px 0;
         }
 
-        .gift-price span {
+        /* Промокод как на скрине */
+        .promo-block {
+            background: var(--orange-light);
+            border-radius: 16px;
+            padding: 10px 12px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .promo-discount {
+            background: var(--orange);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 13px;
-            font-weight: 500;
-            color: var(--text-light);
+            font-weight: 700;
         }
 
-        /* Кнопки на карточке друга */
+        .promo-code {
+            font-family: monospace;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--orange);
+            background: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .gift-link-btn {
+            background: var(--orange-light);
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--orange);
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        /* Кнопки для чужих подарков */
         .gift-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             margin-top: 12px;
+            flex-wrap: wrap;
         }
 
         .action-btn {
             background: var(--orange-light);
-            padding: 8px 14px;
+            padding: 10px 16px;
             border-radius: 30px;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--orange);
             cursor: pointer;
@@ -233,7 +272,7 @@
         /* Форма добавления */
         .add-form {
             background: var(--white);
-            border-radius: 24px;
+            border-radius: 28px;
             padding: 20px;
             margin-bottom: 24px;
             box-shadow: var(--shadow);
@@ -243,7 +282,7 @@
             width: 100%;
             padding: 16px;
             border: 1.5px solid var(--border);
-            border-radius: 18px;
+            border-radius: 20px;
             font-size: 16px;
             margin-bottom: 12px;
             background: var(--white);
@@ -261,7 +300,7 @@
             color: white;
             border: none;
             padding: 16px;
-            border-radius: 20px;
+            border-radius: 24px;
             font-weight: 700;
             font-size: 16px;
             cursor: pointer;
@@ -321,7 +360,7 @@
         }
 
         .modal-title {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-dark);
             margin-bottom: 8px;
@@ -338,6 +377,7 @@
             color: var(--text-gray);
             margin-bottom: 24px;
             line-height: 1.5;
+            font-size: 14px;
         }
 
         .modal-buttons {
@@ -352,7 +392,7 @@
             color: white;
             border: none;
             padding: 16px;
-            border-radius: 20px;
+            border-radius: 24px;
             font-weight: 600;
             font-size: 16px;
             cursor: pointer;
@@ -420,23 +460,21 @@
         <div class="tab" onclick="switchTab('friends')">👥 Друзья</div>
     </div>
 
-    <!-- Мои подарки -->
     <div id="mySection">
         <div class="add-form">
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
-            <input type="text" id="itemLink" placeholder="Ссылка на подарок (необязательно)">
+            <input type="text" id="itemLink" placeholder="Ссылка на подарок">
+            <input type="text" id="itemPromo" placeholder="Промокод (скидка % и код, необязательно)">
             <button class="add-btn" onclick="addGift()">➕ Добавить подарок</button>
         </div>
         <div id="myList"><div class="loading">Загрузка...</div></div>
     </div>
 
-    <!-- Друзья -->
     <div id="friendsSection" style="display:none;">
         <div id="friendsList"><div class="loading">Загрузка друзей...</div></div>
     </div>
 
-    <!-- Модалка -->
     <div id="modal" class="modal" onclick="if(event.target===this) closeModal()">
         <button class="close-modal" onclick="closeModal()">✕</button>
         <div class="modal-content">
@@ -479,6 +517,8 @@
                     name: item.gift_name,
                     price: item.price || 'не указана',
                     link: item.gift_link || '',
+                    promo: item.promo || '',
+                    discount: item.discount || '',
                     photo_url: item.photo_url || '',
                     description: item.description || ''
                 })) : [];
@@ -486,6 +526,22 @@
             } catch(e) {
                 document.getElementById('myList').innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span>Ошибка загрузки</div>';
             }
+        }
+        
+        function renderPromo(item) {
+            if (!item.promo && !item.discount) return '';
+            if (item.discount && item.promo) {
+                return `
+                    <div class="promo-block">
+                        <span class="promo-discount">-${item.discount}%</span>
+                        <span class="promo-code">${item.promo}</span>
+                    </div>
+                `;
+            }
+            if (item.promo && !item.discount) {
+                return `<div class="promo-block"><span class="promo-code">${item.promo}</span></div>`;
+            }
+            return '';
         }
         
         function renderMyWishlist() {
@@ -501,10 +557,10 @@
                             ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
                         </div>
                         <div class="gift-details">
-                            <div>
-                                <div class="gift-title">${escapeHtml(item.name)}</div>
-                                <div class="gift-price">${item.price} ₽ <span></span></div>
-                            </div>
+                            <div class="gift-title">${escapeHtml(item.name)}</div>
+                            ${renderPromo(item)}
+                            <div class="gift-price">${item.price} ₽</div>
+                            ${item.link ? `<button class="gift-link-btn" onclick="event.stopPropagation(); window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -550,6 +606,8 @@
                     name: item.gift_name,
                     price: item.price || 'не указана',
                     link: item.gift_link || '',
+                    promo: item.promo || '',
+                    discount: item.discount || '',
                     photo_url: item.photo_url || '',
                     description: item.description || '',
                     ownerId: friendId,
@@ -579,14 +637,14 @@
                                 ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
                             </div>
                             <div class="gift-details">
-                                <div>
-                                    <div class="gift-title">${escapeHtml(item.name)}</div>
-                                    <div class="gift-price">${item.price} ₽</div>
-                                </div>
+                                <div class="gift-title">${escapeHtml(item.name)}</div>
+                                ${renderPromo(item)}
+                                <div class="gift-price">${item.price} ₽</div>
                                 <div class="gift-actions">
                                     <button class="action-btn" onclick="event.stopPropagation(); reserveGift(${item.id})">🎁 Хочу подарить</button>
                                     <button class="action-btn" onclick="event.stopPropagation(); copyToMe(${item.id})">📋 Добавить к себе</button>
                                 </div>
+                                ${item.link ? `<button class="gift-link-btn" onclick="event.stopPropagation(); window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -598,15 +656,27 @@
             const name = document.getElementById('itemName').value.trim();
             const price = document.getElementById('itemPrice').value.trim();
             const link = document.getElementById('itemLink').value.trim();
+            const promoRaw = document.getElementById('itemPromo').value.trim();
             
             if (!name) { alert('Введите название подарка'); return; }
+            
+            let discount = '';
+            let promo = '';
+            if (promoRaw) {
+                const match = promoRaw.match(/(-?\d+)/);
+                if (match) discount = match[1];
+                const codeMatch = promoRaw.match(/[A-Za-z0-9]+/);
+                if (codeMatch) promo = codeMatch[0];
+            }
             
             const giftData = { 
                 gift_name: name, 
                 price: price ? parseInt(price) : 0, 
-                visibility: "all" 
+                visibility: "all",
+                gift_link: link || '',
+                discount: discount,
+                promo: promo
             };
-            if (link) giftData.gift_link = link;
             
             try {
                 await fetch(`${API_BASE}/wishlist/${userId}`, {
@@ -617,6 +687,7 @@
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
                 document.getElementById('itemLink').value = '';
+                document.getElementById('itemPromo').value = '';
                 await loadMyWishlist();
             } catch(e) { alert('Ошибка добавления'); }
         }
@@ -626,7 +697,10 @@
             if (!item) return;
             document.getElementById('modalTitle').innerText = item.name;
             document.getElementById('modalPrice').innerText = `${item.price} ₽`;
-            document.getElementById('modalDesc').innerText = item.description || 'Нет описания';
+            let desc = item.description || '';
+            if (item.discount && item.promo) desc += `\n\nПромокод: ${item.promo} (скидка ${item.discount}%)`;
+            else if (item.promo) desc += `\n\nПромокод: ${item.promo}`;
+            document.getElementById('modalDesc').innerText = desc || 'Нет описания';
             document.getElementById('modalImage').innerHTML = item.photo_url ? `<img src="${item.photo_url}">` : '🎁';
             
             const buttonsDiv = document.getElementById('modalButtons');
@@ -645,11 +719,11 @@
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
         
         async function reserveGift(wishlistId) {
-            alert(`🎁 Резерв подарка ${wishlistId} заработает, когда Саша добавит эндпоинт /reserve_gift`);
+            alert(`🎁 Резерв подарка ${wishlistId} — ждём эндпоинт /reserve_gift от Саши`);
         }
         
         async function copyToMe(wishlistId) {
-            alert(`📋 Копирование подарка ${wishlistId} заработает после доработки API`);
+            alert(`📋 Копирование подарка ${wishlistId} — ждём API`);
         }
         
         function switchTab(tab) {
