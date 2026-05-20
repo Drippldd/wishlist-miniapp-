@@ -7,15 +7,12 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
             background: #FFF9F0;
             padding: 20px;
             padding-bottom: 40px;
         }
-        
-        /* Оранжевая палитра */
         :root {
             --orange: #FF6B35;
             --orange-dark: #E55A2B;
@@ -25,7 +22,6 @@
             --border: #F0E5D8;
             --white: #FFFFFF;
         }
-        
         h1 {
             font-size: 28px;
             font-weight: 700;
@@ -35,7 +31,6 @@
             align-items: center;
             gap: 8px;
         }
-        
         .subtitle {
             color: var(--text-gray);
             font-size: 14px;
@@ -43,8 +38,6 @@
             border-left: 3px solid var(--orange);
             padding-left: 12px;
         }
-        
-        /* Вкладки */
         .tabs {
             display: flex;
             gap: 8px;
@@ -54,7 +47,6 @@
             border-radius: 40px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
-        
         .tab {
             flex: 1;
             text-align: center;
@@ -66,32 +58,26 @@
             background: transparent;
             color: var(--text-gray);
         }
-        
         .tab.active {
             background: var(--orange);
             color: white;
             box-shadow: 0 2px 8px rgba(255,107,53,0.3);
         }
-        
-        /* Карточка подарка */
         .card {
             background: var(--white);
             border-radius: 20px;
             margin-bottom: 16px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
             cursor: pointer;
         }
-        
         .card:active { transform: scale(0.98); }
-        
         .card-content {
             display: flex;
             padding: 16px;
             gap: 16px;
         }
-        
         .card-photo {
             width: 90px;
             height: 90px;
@@ -104,37 +90,29 @@
             flex-shrink: 0;
             overflow: hidden;
         }
-        
         .card-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
-        .card-info {
-            flex: 1;
-        }
-        
+        .card-info { flex: 1; }
         .card-name {
             font-weight: 700;
             font-size: 18px;
             color: var(--text-dark);
             margin-bottom: 6px;
         }
-        
         .card-price {
             color: var(--orange);
             font-weight: 700;
             font-size: 16px;
             margin-top: 6px;
         }
-        
         .card-buttons {
             display: flex;
             gap: 10px;
             margin-top: 12px;
         }
-        
         .small-btn {
             background: var(--orange-light);
             padding: 8px 14px;
@@ -146,11 +124,7 @@
             border: none;
             transition: all 0.2s;
         }
-        
         .small-btn:active { transform: scale(0.95); }
-        .small-btn.danger { color: var(--orange-dark); }
-        
-        /* Список друзей */
         .friend-card {
             background: var(--white);
             border-radius: 20px;
@@ -161,11 +135,8 @@
             gap: 14px;
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.2s;
         }
-        
         .friend-card:active { transform: scale(0.98); }
-        
         .friend-avatar {
             width: 54px;
             height: 54px;
@@ -178,8 +149,6 @@
             font-weight: 700;
             font-size: 22px;
         }
-        
-        /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
@@ -192,7 +161,6 @@
             padding: 20px;
             overflow-y: auto;
         }
-        
         .modal-content {
             background: var(--white);
             border-radius: 28px;
@@ -200,7 +168,6 @@
             margin: 60px auto;
             overflow: hidden;
         }
-        
         .modal-photo {
             width: 100%;
             height: 260px;
@@ -210,43 +177,29 @@
             justify-content: center;
             font-size: 70px;
         }
-        
-        .modal-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .modal-info {
-            padding: 24px;
-        }
-        
+        .modal-info { padding: 24px; }
         .modal-name {
             font-size: 24px;
             font-weight: 700;
             color: var(--text-dark);
             margin-bottom: 8px;
         }
-        
         .modal-price {
             font-size: 20px;
             color: var(--orange);
             font-weight: 700;
             margin-bottom: 16px;
         }
-        
         .modal-desc {
             color: var(--text-gray);
             margin-bottom: 24px;
             line-height: 1.5;
         }
-        
         .modal-buttons {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
         }
-        
         .big-btn {
             flex: 1;
             background: var(--orange);
@@ -257,12 +210,9 @@
             font-weight: 600;
             cursor: pointer;
             text-align: center;
-            transition: all 0.2s;
         }
-        
         .big-btn:active { transform: scale(0.97); }
         .big-btn.gray { background: var(--text-gray); }
-        
         .close-modal {
             position: absolute;
             top: 20px;
@@ -276,8 +226,6 @@
             font-size: 28px;
             cursor: pointer;
         }
-        
-        /* Форма добавления */
         .add-section {
             background: var(--white);
             border-radius: 20px;
@@ -285,7 +233,6 @@
             margin-bottom: 24px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
-        
         .add-section input {
             width: 100%;
             padding: 14px;
@@ -295,12 +242,10 @@
             margin-bottom: 12px;
             background: var(--white);
         }
-        
         .add-section input:focus {
             outline: none;
             border-color: var(--orange);
         }
-        
         .orange-btn {
             background: var(--orange);
             color: white;
@@ -310,11 +255,8 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: all 0.2s;
         }
-        
         .orange-btn:active { transform: scale(0.97); }
-        
         .back-btn {
             background: var(--orange-light);
             color: var(--orange);
@@ -326,7 +268,6 @@
             width: 100%;
             cursor: pointer;
         }
-        
         .loading, .empty {
             text-align: center;
             padding: 50px;
@@ -337,12 +278,12 @@
 <body>
     <h1>🎁 Мой вишлист</h1>
     <div class="subtitle">Подарки, которые я хочу получить</div>
-    
+
     <div class="tabs">
         <div class="tab active" onclick="switchTab('my')">🎁 Мои подарки</div>
         <div class="tab" onclick="switchTab('friends')">👥 Друзья</div>
     </div>
-    
+
     <div id="mySection">
         <div class="add-section">
             <input type="text" id="itemName" placeholder="Название подарка">
@@ -352,12 +293,11 @@
         </div>
         <div id="myList"><div class="loading">Загрузка...</div></div>
     </div>
-    
+
     <div id="friendsSection" style="display:none;">
         <div id="friendsList"><div class="loading">Загрузка друзей...</div></div>
     </div>
-    
-    <!-- Модальное окно -->
+
     <div id="modal" class="modal" onclick="if(event.target===this) closeModal()">
         <button class="close-modal" onclick="closeModal()">✕</button>
         <div class="modal-content">
