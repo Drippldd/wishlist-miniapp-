@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>OhMyWishes - Вишлист</title>
+    <title>Мой вишлист</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -335,7 +335,7 @@
     </style>
 </head>
 <body>
-    <h1>🎁 OhMyWishes</h1>
+    <h1>🎁 Мой вишлист</h1>
     <div class="subtitle">Подарки, которые я хочу получить</div>
     
     <div class="tabs">
@@ -347,6 +347,7 @@
         <div class="add-section">
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
+            <input type="text" id="itemLink" placeholder="Ссылка на подарок (необязательно)">
             <button class="orange-btn" onclick="addGift()">➕ Добавить подарок</button>
         </div>
         <div id="myList"><div class="loading">Загрузка...</div></div>
@@ -513,15 +514,26 @@
         async function addGift() {
             const name = document.getElementById('itemName').value.trim();
             const price = document.getElementById('itemPrice').value.trim();
+            const link = document.getElementById('itemLink').value.trim();
+            
             if (!name) { alert('Введите название'); return; }
+            
+            const giftData = { 
+                gift_name: name, 
+                price: price ? parseInt(price) : 0, 
+                visibility: "all" 
+            };
+            if (link) giftData.gift_link = link;
+            
             try {
                 await fetch(`${API_BASE}/wishlist/${userId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gift_name: name, price: price ? parseInt(price) : 0, visibility: "all" })
+                    body: JSON.stringify(giftData)
                 });
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
+                document.getElementById('itemLink').value = '';
                 await loadMyWishlist();
             } catch(e) { alert('Ошибка добавления'); }
         }
