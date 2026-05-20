@@ -3,132 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Вишлист</title>
+    <title>OhMyWishes - Вишлист</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f2f2f7;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            background: #FFF9F0;
             padding: 20px;
             padding-bottom: 40px;
         }
+        
+        /* Оранжевая палитра */
+        :root {
+            --orange: #FF6B35;
+            --orange-dark: #E55A2B;
+            --orange-light: #FFF0E6;
+            --text-dark: #1A1A1A;
+            --text-gray: #666666;
+            --border: #F0E5D8;
+            --white: #FFFFFF;
+        }
+        
         h1 {
             font-size: 28px;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        
+        .subtitle {
+            color: var(--text-gray);
+            font-size: 14px;
+            margin-bottom: 24px;
+            border-left: 3px solid var(--orange);
+            padding-left: 12px;
+        }
+        
         /* Вкладки */
         .tabs {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             margin-bottom: 24px;
-            background: white;
+            background: var(--white);
             padding: 6px;
-            border-radius: 32px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 40px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
+        
         .tab {
             flex: 1;
             text-align: center;
             padding: 12px;
-            border-radius: 28px;
+            border-radius: 34px;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s;
             background: transparent;
-            color: #8e8e93;
+            color: var(--text-gray);
         }
+        
         .tab.active {
-            background: #007aff;
+            background: var(--orange);
             color: white;
+            box-shadow: 0 2px 8px rgba(255,107,53,0.3);
         }
-        /* Карточка */
+        
+        /* Карточка подарка */
         .card {
-            background: white;
-            border-radius: 16px;
+            background: var(--white);
+            border-radius: 20px;
             margin-bottom: 16px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: transform 0.1s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
         }
+        
         .card:active { transform: scale(0.98); }
+        
         .card-content {
             display: flex;
             padding: 16px;
             gap: 16px;
         }
+        
         .card-photo {
-            width: 80px;
-            height: 80px;
-            background: #e5e5ea;
-            border-radius: 12px;
+            width: 90px;
+            height: 90px;
+            background: var(--orange-light);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            font-size: 40px;
             flex-shrink: 0;
             overflow: hidden;
         }
+        
         .card-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        
         .card-info {
             flex: 1;
         }
+        
         .card-name {
-            font-weight: 600;
-            font-size: 17px;
-            margin-bottom: 4px;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-bottom: 6px;
         }
+        
         .card-price {
-            color: #007aff;
-            font-weight: 600;
+            color: var(--orange);
+            font-weight: 700;
             font-size: 16px;
             margin-top: 6px;
         }
+        
         .card-buttons {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             margin-top: 12px;
         }
+        
         .small-btn {
-            background: #f2f2f7;
-            padding: 6px 12px;
-            border-radius: 20px;
+            background: var(--orange-light);
+            padding: 8px 14px;
+            border-radius: 30px;
             font-size: 12px;
-            font-weight: 500;
-            color: #007aff;
+            font-weight: 600;
+            color: var(--orange);
             cursor: pointer;
             border: none;
+            transition: all 0.2s;
         }
-        .small-btn.danger { color: #ff3b30; }
-        /* Друзья список */
+        
+        .small-btn:active { transform: scale(0.95); }
+        .small-btn.danger { color: var(--orange-dark); }
+        
+        /* Список друзей */
         .friend-card {
-            background: white;
-            border-radius: 16px;
+            background: var(--white);
+            border-radius: 20px;
             padding: 16px;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
         }
+        
+        .friend-card:active { transform: scale(0.98); }
+        
         .friend-avatar {
-            width: 50px;
-            height: 50px;
-            background: #007aff;
-            border-radius: 25px;
+            width: 54px;
+            height: 54px;
+            background: var(--orange);
+            border-radius: 27px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-weight: bold;
-            font-size: 20px;
+            font-weight: 700;
+            font-size: 22px;
         }
+        
         /* Модальное окно */
         .modal {
             display: none;
@@ -137,63 +187,82 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             z-index: 1000;
             padding: 20px;
             overflow-y: auto;
         }
+        
         .modal-content {
-            background: white;
-            border-radius: 24px;
+            background: var(--white);
+            border-radius: 28px;
             max-width: 400px;
             margin: 60px auto;
             overflow: hidden;
         }
+        
         .modal-photo {
             width: 100%;
-            height: 250px;
-            background: #e5e5ea;
+            height: 260px;
+            background: var(--orange-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 64px;
+            font-size: 70px;
         }
+        
+        .modal-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
         .modal-info {
-            padding: 20px;
+            padding: 24px;
         }
+        
         .modal-name {
             font-size: 24px;
             font-weight: 700;
+            color: var(--text-dark);
             margin-bottom: 8px;
         }
+        
         .modal-price {
             font-size: 20px;
-            color: #007aff;
-            font-weight: 600;
+            color: var(--orange);
+            font-weight: 700;
             margin-bottom: 16px;
         }
+        
         .modal-desc {
-            color: #666;
-            margin-bottom: 20px;
-            line-height: 1.4;
+            color: var(--text-gray);
+            margin-bottom: 24px;
+            line-height: 1.5;
         }
+        
         .modal-buttons {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
         }
+        
         .big-btn {
             flex: 1;
-            background: #007aff;
+            background: var(--orange);
             color: white;
             border: none;
             padding: 14px;
-            border-radius: 14px;
+            border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
             text-align: center;
+            transition: all 0.2s;
         }
-        .big-btn.gray { background: #8e8e93; }
+        
+        .big-btn:active { transform: scale(0.97); }
+        .big-btn.gray { background: var(--text-gray); }
+        
         .close-modal {
             position: absolute;
             top: 20px;
@@ -201,44 +270,73 @@
             background: rgba(0,0,0,0.5);
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 20px;
-            font-size: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            font-size: 28px;
             cursor: pointer;
         }
-        .loading, .empty {
-            text-align: center;
-            padding: 40px;
-            color: #8e8e93;
-        }
+        
+        /* Форма добавления */
         .add-section {
-            background: white;
-            border-radius: 16px;
-            padding: 16px;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 20px;
             margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
+        
         .add-section input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #e5e5ea;
-            border-radius: 12px;
-            margin-bottom: 8px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            background: var(--white);
         }
-        button {
-            background: #007aff;
+        
+        .add-section input:focus {
+            outline: none;
+            border-color: var(--orange);
+        }
+        
+        .orange-btn {
+            background: var(--orange);
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 14px;
+            padding: 14px;
+            border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: all 0.2s;
+        }
+        
+        .orange-btn:active { transform: scale(0.97); }
+        
+        .back-btn {
+            background: var(--orange-light);
+            color: var(--orange);
+            border: none;
+            padding: 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .loading, .empty {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-gray);
         }
     </style>
 </head>
 <body>
-    <h1>🎁 Вишлист</h1>
+    <h1>🎁 OhMyWishes</h1>
+    <div class="subtitle">Подарки, которые я хочу получить</div>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('my')">🎁 Мои подарки</div>
@@ -249,7 +347,7 @@
         <div class="add-section">
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
-            <button onclick="addGift()">➕ Добавить подарок</button>
+            <button class="orange-btn" onclick="addGift()">➕ Добавить подарок</button>
         </div>
         <div id="myList"><div class="loading">Загрузка...</div></div>
     </div>
@@ -349,13 +447,13 @@
                 return;
             }
             container.innerHTML = friendsList.map(friend => `
-                <div class="friend-card" onclick="loadFriendWishlist(${friend.user_id}, '${escapeHtml(friend.first_name)}')">
+                <div class="friend-card" onclick="loadFriendWishlist(${friend.user_id}, '${escapeHtml(friend.first_name || 'Друг')}')">
                     <div class="friend-avatar">${(friend.first_name?.[0] || '?').toUpperCase()}</div>
                     <div style="flex:1">
                         <strong>${escapeHtml(friend.first_name || 'Друг')}</strong>
-                        ${friend.username ? `<div style="font-size:12px;color:#8e8e93">@${friend.username}</div>` : ''}
+                        ${friend.username ? `<div style="font-size:12px;color:#666">@${friend.username}</div>` : ''}
                     </div>
-                    <div>→</div>
+                    <div style="color:var(--orange);">→</div>
                 </div>
             `).join('');
         }
@@ -384,15 +482,20 @@
         function renderFriendsWishlist() {
             const container = document.getElementById('friendsList');
             if (!currentFriendWishlist.length) {
-                container.innerHTML = `<div class="empty">🎁 У ${escapeHtml(currentFriendWishlist[0]?.ownerName || 'друга')} пока нет подарков</div><button onclick="loadFriendsList()" style="margin-top:16px;">← Назад к друзьям</button>`;
+                container.innerHTML = `
+                    <button class="back-btn" onclick="loadFriendsList()">← Назад к друзьям</button>
+                    <div class="empty">🎁 У ${escapeHtml(currentFriendWishlist[0]?.ownerName || 'друга')} пока нет подарков</div>
+                `;
                 return;
             }
             container.innerHTML = `
-                <button onclick="loadFriendsList()" style="margin-bottom:16px;">← Назад к друзьям</button>
+                <button class="back-btn" onclick="loadFriendsList()">← Назад к друзьям</button>
                 ${currentFriendWishlist.map((item, i) => `
-                    <div class="card">
+                    <div class="card" onclick="openModal(${i}, 'friend')">
                         <div class="card-content">
-                            <div class="card-photo">${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}</div>
+                            <div class="card-photo">
+                                ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
+                            </div>
                             <div class="card-info">
                                 <div class="card-name">${escapeHtml(item.name)}</div>
                                 <div class="card-price">${item.price} ₽</div>
@@ -447,11 +550,11 @@
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
         
         async function reserveGift(wishlistId) {
-            alert(`Функция резерва подарка ${wishlistId} будет работать, когда Саша добавит эндпоинт /reserve_gift`);
+            alert(`🎁 Функция резерва подарка ${wishlistId} будет работать, когда Саша добавит эндпоинт /reserve_gift`);
         }
         
         async function copyToMe(wishlistId) {
-            alert(`Копирование подарка ${wishlistId} будет работать после доработки API`);
+            alert(`📋 Копирование подарка ${wishlistId} будет работать после доработки API`);
         }
         
         function switchTab(tab) {
