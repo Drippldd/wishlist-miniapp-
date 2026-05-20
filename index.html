@@ -6,149 +6,279 @@
     <title>Мой вишлист</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-            background: #FFF9F0;
+            background: #FEFAF5;
             padding: 20px;
             padding-bottom: 40px;
         }
+
+        /* Бело-оранжевая палитра */
         :root {
-            --orange: #FF6B35;
-            --orange-dark: #E55A2B;
-            --orange-light: #FFF0E6;
+            --orange: #FF7A2F;
+            --orange-dark: #E55A1F;
+            --orange-light: #FFF2E6;
+            --orange-soft: #FFE4D6;
             --text-dark: #1A1A1A;
-            --text-gray: #666666;
-            --border: #F0E5D8;
+            --text-gray: #7A7A7A;
+            --text-light: #B0B0B0;
+            --border: #F0EBE5;
             --white: #FFFFFF;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.08);
         }
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .subtitle {
-            color: var(--text-gray);
-            font-size: 14px;
+
+        /* Хедер */
+        .header {
             margin-bottom: 24px;
-            border-left: 3px solid var(--orange);
-            padding-left: 12px;
         }
+
+        .header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-gray);
+            font-size: 15px;
+            margin-top: 6px;
+        }
+
+        /* Вкладки */
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-bottom: 28px;
             background: var(--white);
-            padding: 6px;
-            border-radius: 40px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            padding: 5px;
+            border-radius: 60px;
+            box-shadow: var(--shadow);
         }
+
         .tab {
             flex: 1;
             text-align: center;
-            padding: 12px;
-            border-radius: 34px;
+            padding: 12px 0;
+            border-radius: 40px;
             font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
             background: transparent;
             color: var(--text-gray);
         }
+
         .tab.active {
             background: var(--orange);
             color: white;
-            box-shadow: 0 2px 8px rgba(255,107,53,0.3);
+            box-shadow: 0 2px 8px rgba(255, 122, 47, 0.3);
         }
-        .card {
+
+        /* Карточка подарка (как в ohmywishes) */
+        .gift-card {
             background: var(--white);
-            border-radius: 20px;
+            border-radius: 24px;
             margin-bottom: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            box-shadow: var(--shadow);
+            transition: all 0.25s ease;
             cursor: pointer;
         }
-        .card:active { transform: scale(0.98); }
-        .card-content {
+
+        .gift-card:active {
+            transform: scale(0.98);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .gift-card-content {
             display: flex;
             padding: 16px;
             gap: 16px;
         }
-        .card-photo {
-            width: 90px;
-            height: 90px;
+
+        .gift-image {
+            width: 100px;
+            height: 100px;
             background: var(--orange-light);
-            border-radius: 16px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 48px;
             flex-shrink: 0;
             overflow: hidden;
         }
-        .card-photo img {
+
+        .gift-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .card-info { flex: 1; }
-        .card-name {
+
+        .gift-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .gift-title {
             font-weight: 700;
             font-size: 18px;
             color: var(--text-dark);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
-        .card-price {
-            color: var(--orange);
+
+        .gift-price {
             font-weight: 700;
-            font-size: 16px;
-            margin-top: 6px;
+            font-size: 17px;
+            color: var(--orange);
+            margin-top: 4px;
         }
-        .card-buttons {
+
+        .gift-price span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        /* Кнопки на карточке друга */
+        .gift-actions {
             display: flex;
             gap: 10px;
             margin-top: 12px;
         }
-        .small-btn {
+
+        .action-btn {
             background: var(--orange-light);
             padding: 8px 14px;
             border-radius: 30px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--orange);
             cursor: pointer;
             border: none;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .small-btn:active { transform: scale(0.95); }
+
+        .action-btn:active {
+            transform: scale(0.95);
+            background: var(--orange-soft);
+        }
+
+        /* Список друзей */
         .friend-card {
             background: var(--white);
             border-radius: 20px;
-            padding: 16px;
+            padding: 14px 16px;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 14px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
         }
-        .friend-card:active { transform: scale(0.98); }
+
+        .friend-card:active {
+            transform: scale(0.98);
+        }
+
         .friend-avatar {
-            width: 54px;
-            height: 54px;
+            width: 56px;
+            height: 56px;
             background: var(--orange);
-            border-radius: 27px;
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 700;
-            font-size: 22px;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(255, 122, 47, 0.2);
         }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--text-dark);
+        }
+
+        .friend-username {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-top: 2px;
+        }
+
+        .friend-arrow {
+            color: var(--orange);
+            font-size: 20px;
+        }
+
+        /* Форма добавления */
+        .add-form {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .add-form input {
+            width: 100%;
+            padding: 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 18px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            background: var(--white);
+            transition: all 0.2s;
+        }
+
+        .add-form input:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px var(--orange-light);
+        }
+
+        .add-btn {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .add-btn:active {
+            transform: scale(0.97);
+            background: var(--orange-dark);
+        }
+
+        /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
@@ -156,68 +286,92 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 1000;
             padding: 20px;
             overflow-y: auto;
         }
+
         .modal-content {
             background: var(--white);
-            border-radius: 28px;
+            border-radius: 32px;
             max-width: 400px;
             margin: 60px auto;
             overflow: hidden;
         }
-        .modal-photo {
+
+        .modal-image {
             width: 100%;
-            height: 260px;
+            height: 280px;
             background: var(--orange-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 70px;
+            font-size: 80px;
         }
-        .modal-info { padding: 24px; }
-        .modal-name {
-            font-size: 24px;
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-info {
+            padding: 24px;
+        }
+
+        .modal-title {
+            font-size: 26px;
             font-weight: 700;
             color: var(--text-dark);
             margin-bottom: 8px;
         }
+
         .modal-price {
-            font-size: 20px;
-            color: var(--orange);
+            font-size: 22px;
             font-weight: 700;
+            color: var(--orange);
             margin-bottom: 16px;
         }
+
         .modal-desc {
             color: var(--text-gray);
             margin-bottom: 24px;
             line-height: 1.5;
         }
+
         .modal-buttons {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
         }
-        .big-btn {
+
+        .modal-btn {
             flex: 1;
             background: var(--orange);
             color: white;
             border: none;
-            padding: 14px;
-            border-radius: 16px;
+            padding: 16px;
+            border-radius: 20px;
             font-weight: 600;
+            font-size: 16px;
             cursor: pointer;
             text-align: center;
         }
-        .big-btn:active { transform: scale(0.97); }
-        .big-btn.gray { background: var(--text-gray); }
+
+        .modal-btn:active {
+            transform: scale(0.97);
+        }
+
+        .modal-btn.gray {
+            background: var(--text-gray);
+        }
+
         .close-modal {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             color: white;
             border: none;
             width: 44px;
@@ -225,85 +379,70 @@
             border-radius: 22px;
             font-size: 28px;
             cursor: pointer;
+            backdrop-filter: blur(4px);
         }
-        .add-section {
-            background: var(--white);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-        }
-        .add-section input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            font-size: 16px;
-            margin-bottom: 12px;
-            background: var(--white);
-        }
-        .add-section input:focus {
-            outline: none;
-            border-color: var(--orange);
-        }
-        .orange-btn {
-            background: var(--orange);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-        }
-        .orange-btn:active { transform: scale(0.97); }
+
         .back-btn {
             background: var(--orange-light);
             color: var(--orange);
             border: none;
-            padding: 12px;
+            padding: 14px;
             border-radius: 30px;
             font-weight: 600;
             margin-bottom: 16px;
             width: 100%;
             cursor: pointer;
+            font-size: 15px;
         }
+
         .loading, .empty {
             text-align: center;
-            padding: 50px;
+            padding: 60px 20px;
             color: var(--text-gray);
+            font-size: 15px;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
         }
     </style>
 </head>
 <body>
-    <h1>🎁 Мой вишлист</h1>
-    <div class="subtitle">Подарки, которые я хочу получить</div>
+    <div class="header">
+        <h1>Мой вишлист</h1>
+        <p>Подарки, которые я хочу получить</p>
+    </div>
 
     <div class="tabs">
         <div class="tab active" onclick="switchTab('my')">🎁 Мои подарки</div>
         <div class="tab" onclick="switchTab('friends')">👥 Друзья</div>
     </div>
 
+    <!-- Мои подарки -->
     <div id="mySection">
-        <div class="add-section">
+        <div class="add-form">
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
             <input type="text" id="itemLink" placeholder="Ссылка на подарок (необязательно)">
-            <button class="orange-btn" onclick="addGift()">➕ Добавить подарок</button>
+            <button class="add-btn" onclick="addGift()">➕ Добавить подарок</button>
         </div>
         <div id="myList"><div class="loading">Загрузка...</div></div>
     </div>
 
+    <!-- Друзья -->
     <div id="friendsSection" style="display:none;">
         <div id="friendsList"><div class="loading">Загрузка друзей...</div></div>
     </div>
 
+    <!-- Модалка -->
     <div id="modal" class="modal" onclick="if(event.target===this) closeModal()">
         <button class="close-modal" onclick="closeModal()">✕</button>
         <div class="modal-content">
-            <div class="modal-photo" id="modalPhoto">🎁</div>
+            <div class="modal-image" id="modalImage">🎁</div>
             <div class="modal-info">
-                <div class="modal-name" id="modalName"></div>
+                <div class="modal-title" id="modalTitle"></div>
                 <div class="modal-price" id="modalPrice"></div>
                 <div class="modal-desc" id="modalDesc"></div>
                 <div class="modal-buttons" id="modalButtons"></div>
@@ -345,25 +484,27 @@
                 })) : [];
                 renderMyWishlist();
             } catch(e) {
-                document.getElementById('myList').innerHTML = '<div class="empty">❌ Ошибка загрузки</div>';
+                document.getElementById('myList').innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span>Ошибка загрузки</div>';
             }
         }
         
         function renderMyWishlist() {
             const container = document.getElementById('myList');
             if (!myWishlist.length) {
-                container.innerHTML = '<div class="empty">🎄 Пока нет подарков</div>';
+                container.innerHTML = '<div class="empty"><span class="empty-icon">🎄</span>Пока нет подарков</div>';
                 return;
             }
             container.innerHTML = myWishlist.map((item, i) => `
-                <div class="card" onclick="openModal(${i}, 'my')">
-                    <div class="card-content">
-                        <div class="card-photo">
+                <div class="gift-card" onclick="openModal(${i}, 'my')">
+                    <div class="gift-card-content">
+                        <div class="gift-image">
                             ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
                         </div>
-                        <div class="card-info">
-                            <div class="card-name">${escapeHtml(item.name)}</div>
-                            <div class="card-price">${item.price} ₽</div>
+                        <div class="gift-details">
+                            <div>
+                                <div class="gift-title">${escapeHtml(item.name)}</div>
+                                <div class="gift-price">${item.price} ₽ <span></span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -377,24 +518,24 @@
                 friendsList = Array.isArray(data) ? data : [];
                 renderFriendsList();
             } catch(e) {
-                document.getElementById('friendsList').innerHTML = '<div class="empty">❌ Ошибка загрузки друзей</div>';
+                document.getElementById('friendsList').innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span>Ошибка загрузки друзей</div>';
             }
         }
         
         function renderFriendsList() {
             const container = document.getElementById('friendsList');
             if (!friendsList.length) {
-                container.innerHTML = '<div class="empty">👋 Пока нет друзей</div>';
+                container.innerHTML = '<div class="empty"><span class="empty-icon">👋</span>Пока нет друзей</div>';
                 return;
             }
             container.innerHTML = friendsList.map(friend => `
                 <div class="friend-card" onclick="loadFriendWishlist(${friend.user_id}, '${escapeHtml(friend.first_name || 'Друг')}')">
                     <div class="friend-avatar">${(friend.first_name?.[0] || '?').toUpperCase()}</div>
-                    <div style="flex:1">
-                        <strong>${escapeHtml(friend.first_name || 'Друг')}</strong>
-                        ${friend.username ? `<div style="font-size:12px;color:#666">@${friend.username}</div>` : ''}
+                    <div class="friend-info">
+                        <div class="friend-name">${escapeHtml(friend.first_name || 'Друг')}</div>
+                        ${friend.username ? `<div class="friend-username">@${friend.username}</div>` : ''}
                     </div>
-                    <div style="color:var(--orange);">→</div>
+                    <div class="friend-arrow">→</div>
                 </div>
             `).join('');
         }
@@ -416,7 +557,7 @@
                 })) : [];
                 renderFriendsWishlist();
             } catch(e) {
-                document.getElementById('friendsList').innerHTML = '<div class="empty">❌ Ошибка загрузки подарков друга</div>';
+                document.getElementById('friendsList').innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span>Ошибка загрузки подарков</div>';
             }
         }
         
@@ -425,24 +566,26 @@
             if (!currentFriendWishlist.length) {
                 container.innerHTML = `
                     <button class="back-btn" onclick="loadFriendsList()">← Назад к друзьям</button>
-                    <div class="empty">🎁 У ${escapeHtml(currentFriendWishlist[0]?.ownerName || 'друга')} пока нет подарков</div>
+                    <div class="empty"><span class="empty-icon">🎁</span>У ${escapeHtml(currentFriendWishlist[0]?.ownerName || 'друга')} пока нет подарков</div>
                 `;
                 return;
             }
             container.innerHTML = `
                 <button class="back-btn" onclick="loadFriendsList()">← Назад к друзьям</button>
                 ${currentFriendWishlist.map((item, i) => `
-                    <div class="card" onclick="openModal(${i}, 'friend')">
-                        <div class="card-content">
-                            <div class="card-photo">
+                    <div class="gift-card">
+                        <div class="gift-card-content">
+                            <div class="gift-image">
                                 ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
                             </div>
-                            <div class="card-info">
-                                <div class="card-name">${escapeHtml(item.name)}</div>
-                                <div class="card-price">${item.price} ₽</div>
-                                <div class="card-buttons">
-                                    <button class="small-btn" onclick="event.stopPropagation(); reserveGift(${item.id})">🎁 Хочу подарить</button>
-                                    <button class="small-btn" onclick="event.stopPropagation(); copyToMe(${item.id})">📋 Добавить к себе</button>
+                            <div class="gift-details">
+                                <div>
+                                    <div class="gift-title">${escapeHtml(item.name)}</div>
+                                    <div class="gift-price">${item.price} ₽</div>
+                                </div>
+                                <div class="gift-actions">
+                                    <button class="action-btn" onclick="event.stopPropagation(); reserveGift(${item.id})">🎁 Хочу подарить</button>
+                                    <button class="action-btn" onclick="event.stopPropagation(); copyToMe(${item.id})">📋 Добавить к себе</button>
                                 </div>
                             </div>
                         </div>
@@ -456,7 +599,7 @@
             const price = document.getElementById('itemPrice').value.trim();
             const link = document.getElementById('itemLink').value.trim();
             
-            if (!name) { alert('Введите название'); return; }
+            if (!name) { alert('Введите название подарка'); return; }
             
             const giftData = { 
                 gift_name: name, 
@@ -481,19 +624,19 @@
         function openModal(index, type) {
             const item = type === 'my' ? myWishlist[index] : currentFriendWishlist[index];
             if (!item) return;
-            document.getElementById('modalName').innerText = item.name;
+            document.getElementById('modalTitle').innerText = item.name;
             document.getElementById('modalPrice').innerText = `${item.price} ₽`;
             document.getElementById('modalDesc').innerText = item.description || 'Нет описания';
-            document.getElementById('modalPhoto').innerHTML = item.photo_url ? `<img src="${item.photo_url}" style="width:100%;height:100%;object-fit:cover">` : '🎁';
+            document.getElementById('modalImage').innerHTML = item.photo_url ? `<img src="${item.photo_url}">` : '🎁';
             
             const buttonsDiv = document.getElementById('modalButtons');
             if (type === 'my') {
-                buttonsDiv.innerHTML = `<button class="big-btn" onclick="window.open('${item.link || '#'}', '_blank')">🛒 Где купить</button>`;
+                buttonsDiv.innerHTML = `<button class="modal-btn" onclick="window.open('${item.link || '#'}', '_blank')">🛒 Где купить</button>`;
             } else {
                 buttonsDiv.innerHTML = `
-                    <button class="big-btn" onclick="reserveGift(${item.id}); closeModal();">🎁 Хочу подарить</button>
-                    <button class="big-btn" onclick="copyToMe(${item.id}); closeModal();">📋 Добавить к себе</button>
-                    ${item.link ? `<button class="big-btn gray" onclick="window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
+                    <button class="modal-btn" onclick="reserveGift(${item.id}); closeModal();">🎁 Хочу подарить</button>
+                    <button class="modal-btn" onclick="copyToMe(${item.id}); closeModal();">📋 Добавить к себе</button>
+                    ${item.link ? `<button class="modal-btn gray" onclick="window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
                 `;
             }
             document.getElementById('modal').style.display = 'block';
@@ -502,11 +645,11 @@
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
         
         async function reserveGift(wishlistId) {
-            alert(`🎁 Функция резерва подарка ${wishlistId} будет работать, когда Саша добавит эндпоинт /reserve_gift`);
+            alert(`🎁 Резерв подарка ${wishlistId} заработает, когда Саша добавит эндпоинт /reserve_gift`);
         }
         
         async function copyToMe(wishlistId) {
-            alert(`📋 Копирование подарка ${wishlistId} будет работать после доработки API`);
+            alert(`📋 Копирование подарка ${wishlistId} заработает после доработки API`);
         }
         
         function switchTab(tab) {
