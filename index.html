@@ -278,7 +278,7 @@
             border-radius: 16px;
         }
 
-        .file-input-label {
+        .file-picker-btn {
             background: var(--orange-light);
             color: var(--orange);
             padding: 12px;
@@ -291,10 +291,6 @@
             text-align: center;
             margin-bottom: 10px;
             border: 1.5px dashed var(--orange);
-        }
-
-        .file-input-label input {
-            display: none;
         }
 
         .add-btn {
@@ -434,10 +430,8 @@
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
             
-            <label class="file-input-label">
-                📸 Выбрать фото из галереи
-                <input type="file" id="itemPhotoFile" accept="image/*" onchange="previewPhoto(event)">
-            </label>
+            <button class="file-picker-btn" onclick="document.getElementById('photoInput').click()">📸 Выбрать фото из галереи</button>
+            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(this)">
             <div id="photoPreview" class="photo-preview"></div>
             
             <input type="text" id="itemLink" placeholder="Ссылка где купить (необязательно)">
@@ -476,7 +470,15 @@
         let friendsList = [];
         let currentFriend = null;
         let currentFriendWishlist = [];
-        let reservedGifts = new Set();
+        
+        // Загружаем сохранённые резервы из localStorage
+        let reservedGifts = new Set(JSON.parse(localStorage.getItem('reservedGifts') || '[]'));
+        
+        // Сохраняем резервы в localStorage
+        function saveReservedGifts() {
+            localStorage.setItem('reservedGifts', JSON.stringify([...reservedGifts]));
+        }
+        
         let selectedPhotoBase64 = null;
         
         if (!userId) {
@@ -486,8 +488,8 @@
             loadFriendsList();
         }
         
-        function previewPhoto(event) {
-            const file = event.target.files[0];
+        function previewPhoto(input) {
+            const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -594,7 +596,6 @@
             try {
                 const res = await fetch(`${API_BASE}/friends/${userId}`);
                 const data = await res.json();
-                // ТОЛЬКО РЕАЛЬНЫЕ ДРУЗЬЯ, БЕЗ ТЕСТОВЫХ ЗАГЛУШЕК
                 if (Array.isArray(data) && data.length > 0) {
                     friendsList = data;
                 } else {
@@ -627,7 +628,6 @@
         }
         
         async function loadFriendWishlist(friendId, friendName, friendUsername) {
-            console.log('КЛИК НА ДРУГА:', friendId, friendName);
             currentFriend = { id: friendId, name: friendName, username: friendUsername };
             updateHeaderForFriend(friendName);
             
@@ -641,7 +641,7 @@
                     link: item.gift_link || '',
                     photo_url: item.photo_url || '',
                     description: item.description || '',
-                    reserved: false
+                    reserved: reservedGifts.has(item.id)
                 })) : [];
                 renderFriendsWishlist();
             } catch(e) {
@@ -675,8 +675,8 @@
                                 <div class="gift-title" onclick="openModalFriend(${i})">${escapeHtml(item.name)}</div>
                                 <div class="gift-price" onclick="openModalFriend(${i})">${item.price} ₽</div>
                                 <div class="gift-actions">
-                                    <button class="action-btn ${reservedGifts.has(item.id) ? 'reserved' : ''}" onclick="event.stopPropagation(); reserveGift(${item.id}, this)">
-                                        ${reservedGifts.has(item.id) ? '✅ Зарезервировано' : '🎁 Хочу подарить'}
+                                    <button class="action-btn ${item.reserved ? 'reserved' : ''}" onclick="event.stopPropagation(); reserveGift(${item.id}, this)">
+                                        ${item.reserved ? '✅ Зарезервировано' : '🎁 Хочу подарить'}
                                     </button>
                                     <button class="action-btn" onclick="event.stopPropagation(); copyToMe(${item.id})">📋 Добавить к себе</button>
                                     ${item.link ? `<button class="gift-link-btn" onclick="event.stopPropagation(); window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
@@ -720,7 +720,7 @@
                 document.getElementById('itemLink').value = '';
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('photoPreview').innerHTML = '';
-                document.getElementById('itemPhotoFile').value = '';
+                document.getElementById('photoInput').value = '';
                 selectedPhotoBase64 = null;
                 await loadMyWishlist();
                 alert('Подарок добавлен!');
@@ -733,9 +733,15 @@
                 return;
             }
             reservedGifts.add(giftId);
+            saveReservedGifts(); // Сохраняем в localStorage
+            
+            // Обновляем статус в текущем списке
+            const item = currentFriendWishlist.find(g => g.id === giftId);
+            if (item) item.reserved = true;
+            
             buttonElement.classList.add('reserved');
             buttonElement.innerHTML = '✅ Зарезервировано';
-            alert('Подарок зарезервирован!');
+            alert('Подарок зарезервирован! ✅\n\n⚠️ Временно: резерв сохраняется только на вашем устройстве.\nДля синхронизации с сервером нужен эндпоинт POST /reserve_gift/{wishlist_id}');
         }
         
         async function copyToMe(giftId) {
