@@ -109,23 +109,15 @@
         }
 
         .gift-image {
-            width: 100px;
-            height: 100px;
-            background: #F5F5F5;
+            width: 80px;
+            height: 80px;
+            background: var(--orange-light);
             border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 44px;
+            font-size: 36px;
             flex-shrink: 0;
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .gift-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         .gift-details {
@@ -134,9 +126,8 @@
 
         .gift-title {
             font-weight: 700;
-            font-size: 15px;
+            font-size: 16px;
             color: var(--text-dark);
-            margin-bottom: 4px;
             cursor: pointer;
         }
 
@@ -230,8 +221,6 @@
             color: white;
             font-weight: 700;
             font-size: 22px;
-            overflow: hidden;
-            flex-shrink: 0;
         }
 
         .friend-info {
@@ -273,32 +262,6 @@
             min-height: 70px;
         }
 
-        .photo-preview {
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        .photo-preview img {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 16px;
-        }
-
-        .file-picker-btn {
-            background: var(--orange-light);
-            color: var(--orange);
-            padding: 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            display: inline-block;
-            width: 100%;
-            text-align: center;
-            margin-bottom: 10px;
-            border: 1.5px dashed var(--orange);
-        }
-
         .add-btn {
             background: var(--orange);
             color: white;
@@ -333,18 +296,12 @@
 
         .modal-image {
             width: 100%;
-            height: 240px;
-            background: #F5F5F5;
+            height: 200px;
+            background: var(--orange-light);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 60px;
-        }
-
-        .modal-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         .modal-info {
@@ -367,7 +324,6 @@
             color: var(--text-gray);
             margin-bottom: 20px;
             font-size: 14px;
-            line-height: 1.4;
         }
 
         .modal-buttons {
@@ -435,11 +391,6 @@
         <div class="add-form">
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
-            
-            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="compressAndPreview(this)">
-            <button class="file-picker-btn" onclick="document.getElementById('photoInput').click()">📸 Выбрать фото из галереи</button>
-            <div id="photoPreview" class="photo-preview"></div>
-            
             <input type="text" id="itemLink" placeholder="Ссылка где купить (необязательно)">
             <textarea id="itemDesc" placeholder="Описание подарка (необязательно)"></textarea>
             <button class="add-btn" onclick="addGift()">+ Добавить подарок</button>
@@ -454,7 +405,7 @@
     <div id="modal" class="modal" onclick="if(event.target===this) closeModal()">
         <button class="close-modal" onclick="closeModal()">✕</button>
         <div class="modal-content">
-            <div class="modal-image" id="modalImage">🎁</div>
+            <div class="modal-image">🎁</div>
             <div class="modal-info">
                 <div class="modal-title" id="modalTitle"></div>
                 <div class="modal-price" id="modalPrice"></div>
@@ -476,50 +427,12 @@
         let friendsList = [];
         let currentFriend = null;
         let currentFriendWishlist = [];
-        let selectedPhotoBase64 = null;
         
         if (!userId) {
             alert('Ошибка: не определён пользователь');
         } else {
             loadMyWishlist();
             loadFriendsList();
-        }
-        
-        // Сжатие фото перед преобразованием в base64
-        function compressAndPreview(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    // Сжатие до 500px ширины
-                    const maxWidth = 500;
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
-                    }
-                    
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Качество 0.7 (70%)
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    selectedPhotoBase64 = compressedBase64;
-                    
-                    const preview = document.getElementById('photoPreview');
-                    preview.innerHTML = `<img src="${compressedBase64}" alt="Предпросмотр">`;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
         }
         
         function updateHeaderForFriend(friendName = null) {
@@ -562,7 +475,6 @@
                     name: item.gift_name,
                     price: item.price || 'не указана',
                     link: item.gift_link || '',
-                    photo_url: item.photo_url || '',
                     description: item.description || ''
                 })) : [];
                 renderMyWishlist();
@@ -597,9 +509,7 @@
             container.innerHTML = myWishlist.map((item, i) => `
                 <div class="gift-card">
                     <div class="gift-card-content">
-                        <div class="gift-image" onclick="openModal(${i}, 'my')">
-                            ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
-                        </div>
+                        <div class="gift-image" onclick="openModal(${i}, 'my')">🎁</div>
                         <div class="gift-details">
                             <div class="gift-title" onclick="openModal(${i}, 'my')">${escapeHtml(item.name)}</div>
                             <div class="gift-price" onclick="openModal(${i}, 'my')">${item.price} ₽</div>
@@ -661,7 +571,6 @@
                     name: item.gift_name,
                     price: item.price || 'не указана',
                     link: item.gift_link || '',
-                    photo_url: item.photo_url || '',
                     description: item.description || ''
                 })) : [];
                 renderFriendsWishlist();
@@ -689,9 +598,7 @@
                 ${currentFriendWishlist.map((item, i) => `
                     <div class="gift-card">
                         <div class="gift-card-content">
-                            <div class="gift-image" onclick="openModalFriend(${i})">
-                                ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
-                            </div>
+                            <div class="gift-image" onclick="openModalFriend(${i})">🎁</div>
                             <div class="gift-details">
                                 <div class="gift-title" onclick="openModalFriend(${i})">${escapeHtml(item.name)}</div>
                                 <div class="gift-price" onclick="openModalFriend(${i})">${item.price} ₽</div>
@@ -724,7 +631,6 @@
                 price: price ? parseInt(price) : 0, 
                 visibility: "all",
                 gift_link: link || '',
-                photo_url: selectedPhotoBase64 || '',
                 description: description || ''
             };
             
@@ -736,17 +642,13 @@
                 });
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
                 document.getElementById('itemLink').value = '';
                 document.getElementById('itemDesc').value = '';
-                document.getElementById('photoPreview').innerHTML = '';
-                document.getElementById('photoInput').value = '';
-                selectedPhotoBase64 = null;
                 
                 await loadMyWishlist();
                 alert('Подарок добавлен!');
@@ -768,7 +670,6 @@
                 price: typeof gift.price === 'number' ? gift.price : parseInt(gift.price) || 0,
                 visibility: "all",
                 gift_link: gift.link || '',
-                photo_url: gift.photo_url || '',
                 description: gift.description || ''
             };
             
@@ -791,7 +692,6 @@
             document.getElementById('modalTitle').innerText = item.name;
             document.getElementById('modalPrice').innerText = `${item.price} ₽`;
             document.getElementById('modalDesc').innerText = item.description || 'Нет описания';
-            document.getElementById('modalImage').innerHTML = item.photo_url ? `<img src="${item.photo_url}">` : '🎁';
             
             const buttonsDiv = document.getElementById('modalButtons');
             if (type === 'my') {
