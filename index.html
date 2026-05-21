@@ -418,13 +418,6 @@
             padding: 40px 20px;
             color: var(--text-gray);
         }
-
-        .upload-status {
-            font-size: 12px;
-            color: var(--orange);
-            text-align: center;
-            margin-bottom: 10px;
-        }
     </style>
 </head>
 <body>
@@ -443,9 +436,9 @@
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
             
-            <button class="file-picker-btn" onclick="pickPhoto()">📸 Выбрать фото из галереи</button>
+            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="compressAndPreview(this)">
+            <button class="file-picker-btn" onclick="document.getElementById('photoInput').click()">📸 Выбрать фото из галереи</button>
             <div id="photoPreview" class="photo-preview"></div>
-            <div id="uploadStatus" class="upload-status"></div>
             
             <input type="text" id="itemLink" placeholder="Ссылка где купить (необязательно)">
             <textarea id="itemDesc" placeholder="Описание подарка (необязательно)"></textarea>
@@ -483,8 +476,7 @@
         let friendsList = [];
         let currentFriend = null;
         let currentFriendWishlist = [];
-        let selectedPhotoUrl = null;
-        let isUploading = false;
+        let selectedPhotoBase64 = null;
         
         if (!userId) {
             alert('Ошибка: не определён пользователь');
@@ -493,37 +485,41 @@
             loadFriendsList();
         }
         
-        async function pickPhoto() {
-            tg.showFilePicker({
-                types: ['image'],
-                multiple: false
-            }, async (result) => {
-                console.log('Результат выбора:', result);
-                
-                if (result && result.files && result.files.length > 0) {
-                    const file = result.files[0];
-                    const statusDiv = document.getElementById('uploadStatus');
-                    statusDiv.innerHTML = '⏳ Загрузка фото в Telegram Cloud...';
+        // Сжатие фото перед преобразованием в base64
+        function compressAndPreview(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Сжатие до 500px ширины
+                    const maxWidth = 500;
+                    let width = img.width;
+                    let height = img.height;
                     
-                    try {
-                        const uploaded = await tg.uploadFile(file);
-                        console.log('Результат uploadFile:', uploaded);
-                        
-                        if (uploaded && uploaded.url) {
-                            selectedPhotoUrl = uploaded.url;
-                            const preview = document.getElementById('photoPreview');
-                            preview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр" style="max-width:100%;max-height:150px;border-radius:16px;">`;
-                            statusDiv.innerHTML = '✅ Фото загружено!';
-                            setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
-                        } else {
-                            statusDiv.innerHTML = '❌ Не удалось получить ссылку на фото';
-                        }
-                    } catch (error) {
-                        console.error('Ошибка загрузки:', error);
-                        statusDiv.innerHTML = '❌ Ошибка загрузки фото: ' + error.message;
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
                     }
-                }
-            });
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Качество 0.7 (70%)
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    selectedPhotoBase64 = compressedBase64;
+                    
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = `<img src="${compressedBase64}" alt="Предпросмотр">`;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
         
         function updateHeaderForFriend(friendName = null) {
@@ -716,11 +712,6 @@
         }
         
         async function addGift() {
-            if (isUploading) {
-                alert('Подождите, фото загружается...');
-                return;
-            }
-            
             const name = document.getElementById('itemName').value.trim();
             const price = document.getElementById('itemPrice').value.trim();
             const link = document.getElementById('itemLink').value.trim();
@@ -733,7 +724,7 @@
                 price: price ? parseInt(price) : 0, 
                 visibility: "all",
                 gift_link: link || '',
-                photo_url: selectedPhotoUrl || '',
+                photo_url: selectedPhotoBase64 || '',
                 description: description || ''
             };
             
@@ -754,7 +745,8 @@
                 document.getElementById('itemLink').value = '';
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('photoPreview').innerHTML = '';
-                selectedPhotoUrl = null;
+                document.getElementById('photoInput').value = '';
+                selectedPhotoBase64 = null;
                 
                 await loadMyWishlist();
                 alert('Подарок добавлен!');
