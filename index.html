@@ -266,6 +266,36 @@
             min-height: 70px;
         }
 
+        .photo-preview {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .photo-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 16px;
+        }
+
+        .file-input-label {
+            background: var(--orange-light);
+            color: var(--orange);
+            padding: 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 10px;
+            border: 1.5px dashed var(--orange);
+        }
+
+        .file-input-label input {
+            display: none;
+        }
+
         .add-btn {
             background: var(--orange);
             color: white;
@@ -402,7 +432,14 @@
         <div class="add-form">
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
-            <input type="text" id="itemPhoto" placeholder="Ссылка на фото (необязательно)">
+            
+            <!-- Загрузка фото из галереи -->
+            <label class="file-input-label">
+                📸 Выбрать фото из галереи
+                <input type="file" id="itemPhotoFile" accept="image/*" onchange="previewPhoto(event)">
+            </label>
+            <div id="photoPreview" class="photo-preview"></div>
+            
             <input type="text" id="itemLink" placeholder="Ссылка где купить (необязательно)">
             <textarea id="itemDesc" placeholder="Описание подарка (необязательно)"></textarea>
             <button class="add-btn" onclick="addGift()">+ Добавить подарок</button>
@@ -440,12 +477,26 @@
         let currentFriend = null;
         let currentFriendWishlist = [];
         let reservedGifts = new Set();
+        let selectedPhotoBase64 = null;
         
         if (!userId) {
             alert('Ошибка: не определён пользователь');
         } else {
             loadMyWishlist();
             loadFriendsList();
+        }
+        
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedPhotoBase64 = e.target.result;
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = `<img src="${selectedPhotoBase64}" alt="Предпросмотр">`;
+                };
+                reader.readAsDataURL(file);
+            }
         }
         
         function updateHeaderForFriend(friendName = null) {
@@ -634,18 +685,23 @@
         async function addGift() {
             const name = document.getElementById('itemName').value.trim();
             const price = document.getElementById('itemPrice').value.trim();
-            const photoUrl = document.getElementById('itemPhoto').value.trim();
             const link = document.getElementById('itemLink').value.trim();
             const description = document.getElementById('itemDesc').value.trim();
             
             if (!name) { alert('Введите название подарка'); return; }
+            
+            // Если есть выбранное фото, преобразуем base64 в ссылку (пока локально)
+            let photoUrl = '';
+            if (selectedPhotoBase64) {
+                photoUrl = selectedPhotoBase64;
+            }
             
             const giftData = { 
                 gift_name: name, 
                 price: price ? parseInt(price) : 0, 
                 visibility: "all",
                 gift_link: link || '',
-                photo_url: photoUrl || '',
+                photo_url: photoUrl,
                 description: description || ''
             };
             
@@ -657,9 +713,11 @@
                 });
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
-                document.getElementById('itemPhoto').value = '';
                 document.getElementById('itemLink').value = '';
                 document.getElementById('itemDesc').value = '';
+                document.getElementById('photoPreview').innerHTML = '';
+                document.getElementById('itemPhotoFile').value = '';
+                selectedPhotoBase64 = null;
                 await loadMyWishlist();
             } catch(e) { alert('Ошибка добавления'); }
         }
