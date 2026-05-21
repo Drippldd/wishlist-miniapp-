@@ -23,7 +23,6 @@
             --orange: #FF6B00;
             --orange-dark: #E55A00;
             --orange-light: #FFF0E5;
-            --orange-soft: #FFE0CC;
             --green: #34C759;
             --green-light: #E5F5E8;
             --red: #FF3B30;
@@ -229,12 +228,6 @@
             flex-shrink: 0;
         }
 
-        .friend-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
         .friend-info {
             flex: 1;
         }
@@ -285,7 +278,7 @@
             border-radius: 16px;
         }
 
-        .file-picker-btn {
+        .file-input-label {
             background: var(--orange-light);
             color: var(--orange);
             padding: 12px;
@@ -298,6 +291,10 @@
             text-align: center;
             margin-bottom: 10px;
             border: 1.5px dashed var(--orange);
+        }
+
+        .file-input-label input {
+            display: none;
         }
 
         .add-btn {
@@ -419,13 +416,6 @@
             padding: 40px 20px;
             color: var(--text-gray);
         }
-
-        .uploading {
-            font-size: 12px;
-            color: var(--orange);
-            margin-top: 5px;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
@@ -444,9 +434,11 @@
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
             
-            <button class="file-picker-btn" onclick="pickAndUploadPhoto()">📸 Выбрать фото из галереи</button>
+            <label class="file-input-label">
+                📸 Выбрать фото из галереи
+                <input type="file" id="itemPhotoFile" accept="image/*" onchange="previewPhoto(event)">
+            </label>
             <div id="photoPreview" class="photo-preview"></div>
-            <div id="uploadStatus" class="uploading"></div>
             
             <input type="text" id="itemLink" placeholder="Ссылка где купить (необязательно)">
             <textarea id="itemDesc" placeholder="Описание подарка (необязательно)"></textarea>
@@ -485,7 +477,7 @@
         let currentFriend = null;
         let currentFriendWishlist = [];
         let reservedGifts = new Set();
-        let selectedPhotoUrl = null;
+        let selectedPhotoBase64 = null;
         
         if (!userId) {
             alert('Ошибка: не определён пользователь');
@@ -494,47 +486,17 @@
             loadFriendsList();
         }
         
-        // Выбор и загрузка фото через Telegram WebApp с uploadFile
-        async function pickAndUploadPhoto() {
-            tg.showFilePicker({
-                types: ['image'],
-                multiple: false
-            }, async (result) => {
-                console.log('=== РЕЗУЛЬТАТ ВЫБОРА ФОТО ===', result);
-                
-                if (result && result.files && result.files.length > 0) {
-                    const file = result.files[0];
-                    console.log('Объект файла:', file);
-                    
-                    const statusDiv = document.getElementById('uploadStatus');
-                    statusDiv.innerHTML = '⏳ Загрузка фото в Telegram Cloud...';
-                    
-                    try {
-                        // ВАЖНО: загружаем файл в облако Telegram
-                        const uploaded = await tg.uploadFile(file);
-                        console.log('Результат uploadFile:', uploaded);
-                        
-                        const permanentUrl = uploaded.url; // постоянная публичная ссылка
-                        console.log('Постоянная ссылка на фото:', permanentUrl);
-                        
-                        if (permanentUrl) {
-                            selectedPhotoUrl = permanentUrl;
-                            const preview = document.getElementById('photoPreview');
-                            preview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр" style="max-width:100%;max-height:150px;border-radius:16px;">`;
-                            statusDiv.innerHTML = '✅ Фото загружено в Telegram Cloud!';
-                            setTimeout(() => { statusDiv.innerHTML = ''; }, 3000);
-                        } else {
-                            statusDiv.innerHTML = '❌ Не удалось получить ссылку на фото';
-                            console.error('Нет url в ответе:', uploaded);
-                        }
-                    } catch (error) {
-                        console.error('Ошибка при загрузке файла:', error);
-                        statusDiv.innerHTML = '❌ Ошибка загрузки фото: ' + error.message;
-                    }
-                } else {
-                    alert('Фото не выбрано');
-                }
-            });
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedPhotoBase64 = e.target.result;
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = `<img src="${selectedPhotoBase64}" alt="Предпросмотр">`;
+                };
+                reader.readAsDataURL(file);
+            }
         }
         
         function updateHeaderForFriend(friendName = null) {
@@ -632,20 +594,16 @@
             try {
                 const res = await fetch(`${API_BASE}/friends/${userId}`);
                 const data = await res.json();
+                // ТОЛЬКО РЕАЛЬНЫЕ ДРУЗЬЯ, БЕЗ ТЕСТОВЫХ ЗАГЛУШЕК
                 if (Array.isArray(data) && data.length > 0) {
                     friendsList = data;
                 } else {
-                    friendsList = [
-                        { user_id: 123456789, first_name: "Анна", username: "anna_test", photo_url: "" },
-                        { user_id: 987654321, first_name: "Дмитрий", username: "dima_test", photo_url: "" }
-                    ];
+                    friendsList = [];
                 }
                 renderFriendsList();
             } catch(e) {
-                friendsList = [
-                    { user_id: 123456789, first_name: "Тестовый друг 1", username: "friend1", photo_url: "" },
-                    { user_id: 987654321, first_name: "Тестовый друг 2", username: "friend2", photo_url: "" }
-                ];
+                console.error('Ошибка загрузки друзей:', e);
+                friendsList = [];
                 renderFriendsList();
             }
         }
@@ -658,9 +616,7 @@
             }
             container.innerHTML = friendsList.map(friend => `
                 <div class="friend-card" onclick="loadFriendWishlist(${friend.user_id}, '${escapeHtml(friend.first_name || 'Друг')}', '${escapeHtml(friend.username || '')}')">
-                    <div class="friend-avatar">
-                        ${friend.photo_url ? `<img src="${friend.photo_url}" onerror="this.parentElement.innerHTML='${(friend.first_name?.[0] || '?').toUpperCase()}'">` : (friend.first_name?.[0] || '?').toUpperCase()}
-                    </div>
+                    <div class="friend-avatar">${(friend.first_name?.[0] || '?').toUpperCase()}</div>
                     <div class="friend-info">
                         <div class="friend-name">${escapeHtml(friend.first_name || 'Друг')}</div>
                         ${friend.username ? `<div class="friend-username">@${friend.username}</div>` : ''}
@@ -674,7 +630,6 @@
             console.log('КЛИК НА ДРУГА:', friendId, friendName);
             currentFriend = { id: friendId, name: friendName, username: friendUsername };
             updateHeaderForFriend(friendName);
-            console.log('Заголовок должен поменяться на:', friendName);
             
             try {
                 const res = await fetch(`${API_BASE}/wishlist/${friendId}`);
@@ -686,14 +641,12 @@
                     link: item.gift_link || '',
                     photo_url: item.photo_url || '',
                     description: item.description || '',
-                    reserved: reservedGifts.has(item.id)
+                    reserved: false
                 })) : [];
                 renderFriendsWishlist();
             } catch(e) {
-                currentFriendWishlist = [
-                    { id: 1, name: "Пример подарка 1", price: "1500", link: "", photo_url: "", description: "Тестовый подарок", reserved: false },
-                    { id: 2, name: "Пример подарка 2", price: "3000", link: "", photo_url: "", description: "Ещё один тест", reserved: false }
-                ];
+                console.error('Ошибка загрузки подарков друга:', e);
+                currentFriendWishlist = [];
                 renderFriendsWishlist();
             }
             
@@ -722,8 +675,8 @@
                                 <div class="gift-title" onclick="openModalFriend(${i})">${escapeHtml(item.name)}</div>
                                 <div class="gift-price" onclick="openModalFriend(${i})">${item.price} ₽</div>
                                 <div class="gift-actions">
-                                    <button class="action-btn ${item.reserved ? 'reserved' : ''}" onclick="event.stopPropagation(); reserveGift(${item.id}, this)">
-                                        ${item.reserved ? '✅ Зарезервировано' : '🎁 Хочу подарить'}
+                                    <button class="action-btn ${reservedGifts.has(item.id) ? 'reserved' : ''}" onclick="event.stopPropagation(); reserveGift(${item.id}, this)">
+                                        ${reservedGifts.has(item.id) ? '✅ Зарезервировано' : '🎁 Хочу подарить'}
                                     </button>
                                     <button class="action-btn" onclick="event.stopPropagation(); copyToMe(${item.id})">📋 Добавить к себе</button>
                                     ${item.link ? `<button class="gift-link-btn" onclick="event.stopPropagation(); window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
@@ -746,14 +699,13 @@
             const description = document.getElementById('itemDesc').value.trim();
             
             if (!name) { alert('Введите название подарка'); return; }
-            if (!selectedPhotoUrl) { alert('Выберите фото подарка'); return; }
             
             const giftData = { 
                 gift_name: name, 
                 price: price ? parseInt(price) : 0, 
                 visibility: "all",
                 gift_link: link || '',
-                photo_url: selectedPhotoUrl,
+                photo_url: selectedPhotoBase64 || '',
                 description: description || ''
             };
             
@@ -768,7 +720,8 @@
                 document.getElementById('itemLink').value = '';
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('photoPreview').innerHTML = '';
-                selectedPhotoUrl = null;
+                document.getElementById('itemPhotoFile').value = '';
+                selectedPhotoBase64 = null;
                 await loadMyWishlist();
                 alert('Подарок добавлен!');
             } catch(e) { alert('Ошибка добавления: ' + e.message); }
@@ -780,11 +733,9 @@
                 return;
             }
             reservedGifts.add(giftId);
-            const item = currentFriendWishlist.find(g => g.id === giftId);
-            if (item) item.reserved = true;
             buttonElement.classList.add('reserved');
             buttonElement.innerHTML = '✅ Зарезервировано';
-            alert('Подарок зарезервирован! ✅\n\n⚠️ Временно: резерв работает только локально.\nДля синхронизации с сервером добавьте эндпоинт POST /reserve_gift/{wishlist_id}');
+            alert('Подарок зарезервирован!');
         }
         
         async function copyToMe(giftId) {
@@ -828,7 +779,7 @@
                     <button class="modal-btn" style="background:#FF3B30" onclick="deleteGift(${item.id}, ${index}); closeModal();">🗑 Удалить</button>
                 `;
             } else {
-                const isReserved = reservedGifts.has(item.id) || item.reserved;
+                const isReserved = reservedGifts.has(item.id);
                 buttonsDiv.innerHTML = `
                     <button class="modal-btn" style="${isReserved ? 'background:#34C759' : ''}" onclick="reserveGift(${item.id}); closeModal();">
                         ${isReserved ? '✅ Зарезервировано' : '🎁 Хочу подарить'}
