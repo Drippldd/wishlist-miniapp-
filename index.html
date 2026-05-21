@@ -419,6 +419,13 @@
             padding: 40px 20px;
             color: var(--text-gray);
         }
+
+        .uploading {
+            font-size: 12px;
+            color: var(--orange);
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -437,8 +444,9 @@
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
             
-            <button class="file-picker-btn" onclick="pickPhoto()">📸 Выбрать фото из галереи</button>
+            <button class="file-picker-btn" onclick="pickAndUploadPhoto()">📸 Выбрать фото из галереи</button>
             <div id="photoPreview" class="photo-preview"></div>
+            <div id="uploadStatus" class="uploading"></div>
             
             <input type="text" id="itemLink" placeholder="Ссылка где купить (необязательно)">
             <textarea id="itemDesc" placeholder="Описание подарка (необязательно)"></textarea>
@@ -486,32 +494,45 @@
             loadFriendsList();
         }
         
-        // Выбор фото через Telegram WebApp
-        function pickPhoto() {
+        // Выбор и загрузка фото через Telegram WebApp с uploadFile
+        async function pickAndUploadPhoto() {
             tg.showFilePicker({
-                multiple: false,
-                fileTypes: ['image/*'],
-                callback: function(result) {
-                    console.log('=== РЕЗУЛЬТАТ ВЫБОРА ФОТО ===', result);
-                    if (result && result.files && result.files.length > 0) {
-                        const file = result.files[0];
-                        console.log('Объект файла:', file);
-                        console.log('file.url:', file.url);
-                        console.log('file.local_url:', file.local_url);
+                types: ['image'],
+                multiple: false
+            }, async (result) => {
+                console.log('=== РЕЗУЛЬТАТ ВЫБОРА ФОТО ===', result);
+                
+                if (result && result.files && result.files.length > 0) {
+                    const file = result.files[0];
+                    console.log('Объект файла:', file);
+                    
+                    const statusDiv = document.getElementById('uploadStatus');
+                    statusDiv.innerHTML = '⏳ Загрузка фото в Telegram Cloud...';
+                    
+                    try {
+                        // ВАЖНО: загружаем файл в облако Telegram
+                        const uploaded = await tg.uploadFile(file);
+                        console.log('Результат uploadFile:', uploaded);
                         
-                        // Пробуем получить ссылку
-                        const photoUrl = file.url || file.local_url;
-                        if (photoUrl) {
-                            selectedPhotoUrl = photoUrl;
+                        const permanentUrl = uploaded.url; // постоянная публичная ссылка
+                        console.log('Постоянная ссылка на фото:', permanentUrl);
+                        
+                        if (permanentUrl) {
+                            selectedPhotoUrl = permanentUrl;
                             const preview = document.getElementById('photoPreview');
                             preview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр" style="max-width:100%;max-height:150px;border-radius:16px;">`;
-                            alert('Фото выбрано! Сохрани подарок.');
+                            statusDiv.innerHTML = '✅ Фото загружено в Telegram Cloud!';
+                            setTimeout(() => { statusDiv.innerHTML = ''; }, 3000);
                         } else {
-                            alert('Не удалось получить ссылку на фото. Проверь консоль.');
+                            statusDiv.innerHTML = '❌ Не удалось получить ссылку на фото';
+                            console.error('Нет url в ответе:', uploaded);
                         }
-                    } else {
-                        alert('Фото не выбрано');
+                    } catch (error) {
+                        console.error('Ошибка при загрузке файла:', error);
+                        statusDiv.innerHTML = '❌ Ошибка загрузки фото: ' + error.message;
                     }
+                } else {
+                    alert('Фото не выбрано');
                 }
             });
         }
@@ -614,7 +635,6 @@
                 if (Array.isArray(data) && data.length > 0) {
                     friendsList = data;
                 } else {
-                    // Тестовые друзья для демонстрации
                     friendsList = [
                         { user_id: 123456789, first_name: "Анна", username: "anna_test", photo_url: "" },
                         { user_id: 987654321, first_name: "Дмитрий", username: "dima_test", photo_url: "" }
@@ -670,7 +690,6 @@
                 })) : [];
                 renderFriendsWishlist();
             } catch(e) {
-                // Тестовые подарки для демонстрации
                 currentFriendWishlist = [
                     { id: 1, name: "Пример подарка 1", price: "1500", link: "", photo_url: "", description: "Тестовый подарок", reserved: false },
                     { id: 2, name: "Пример подарка 2", price: "3000", link: "", photo_url: "", description: "Ещё один тест", reserved: false }
@@ -727,13 +746,14 @@
             const description = document.getElementById('itemDesc').value.trim();
             
             if (!name) { alert('Введите название подарка'); return; }
+            if (!selectedPhotoUrl) { alert('Выберите фото подарка'); return; }
             
             const giftData = { 
                 gift_name: name, 
                 price: price ? parseInt(price) : 0, 
                 visibility: "all",
                 gift_link: link || '',
-                photo_url: selectedPhotoUrl || '',
+                photo_url: selectedPhotoUrl,
                 description: description || ''
             };
             
@@ -760,12 +780,11 @@
                 return;
             }
             reservedGifts.add(giftId);
-            // Обновляем статус в текущем списке
             const item = currentFriendWishlist.find(g => g.id === giftId);
             if (item) item.reserved = true;
             buttonElement.classList.add('reserved');
             buttonElement.innerHTML = '✅ Зарезервировано';
-            alert('Подарок зарезервирован! ✅\n\n⚠️ Внимание: сейчас резерв работает только локально.\nЧтобы он сохранялся после перезахода и был виден всем, Саше нужно добавить эндпоинт POST /reserve_gift/{wishlist_id}');
+            alert('Подарок зарезервирован! ✅\n\n⚠️ Временно: резерв работает только локально.\nДля синхронизации с сервером добавьте эндпоинт POST /reserve_gift/{wishlist_id}');
         }
         
         async function copyToMe(giftId) {
