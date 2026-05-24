@@ -6,7 +6,11 @@
     <title>Вишлист</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
@@ -19,6 +23,7 @@
             --orange: #FF6B00;
             --orange-dark: #E55A00;
             --orange-light: #FFF0E5;
+            --orange-soft: #FFE0CC;
             --green: #34C759;
             --green-light: #E5F5E8;
             --red: #FF3B30;
@@ -29,9 +34,21 @@
             --white: #FFFFFF;
         }
 
-        .header { margin-bottom: 20px; }
-        .header h1 { font-size: 28px; font-weight: 700; color: var(--text-dark); }
-        .header p { color: var(--text-gray); font-size: 13px; margin-top: 4px; }
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .header p {
+            color: var(--text-gray);
+            font-size: 13px;
+            margin-top: 4px;
+        }
 
         .back-header {
             display: flex;
@@ -39,6 +56,7 @@
             gap: 12px;
             margin-bottom: 20px;
         }
+
         .back-header button {
             background: var(--orange-light);
             border: none;
@@ -59,6 +77,7 @@
             border-radius: 40px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
+
         .tab {
             flex: 1;
             text-align: center;
@@ -70,6 +89,7 @@
             background: transparent;
             color: var(--text-gray);
         }
+
         .tab.active {
             background: var(--orange);
             color: white;
@@ -82,11 +102,13 @@
             overflow: hidden;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
         }
+
         .gift-card-content {
             display: flex;
             padding: 14px;
             gap: 14px;
         }
+
         .gift-image {
             width: 100px;
             height: 100px;
@@ -100,12 +122,17 @@
             overflow: hidden;
             cursor: pointer;
         }
+
         .gift-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .gift-details { flex: 1; }
+
+        .gift-details {
+            flex: 1;
+        }
+
         .gift-title {
             font-weight: 700;
             font-size: 15px;
@@ -113,6 +140,7 @@
             margin-bottom: 4px;
             cursor: pointer;
         }
+
         .gift-price {
             font-weight: 700;
             font-size: 18px;
@@ -120,11 +148,13 @@
             margin: 6px 0;
             cursor: pointer;
         }
+
         .gift-desc {
             font-size: 12px;
             color: var(--text-gray);
             margin-top: 4px;
         }
+
         .gift-link-btn {
             background: transparent;
             padding: 6px 14px;
@@ -138,6 +168,7 @@
             align-items: center;
             gap: 6px;
         }
+
         .delete-btn {
             background: var(--red-light);
             padding: 6px 14px;
@@ -152,12 +183,14 @@
             gap: 6px;
             margin-left: 8px;
         }
+
         .gift-actions {
             display: flex;
             gap: 8px;
             margin-top: 8px;
             flex-wrap: wrap;
         }
+
         .action-btn {
             background: transparent;
             padding: 6px 12px;
@@ -180,6 +213,7 @@
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
+
         .friend-avatar {
             width: 52px;
             height: 52px;
@@ -192,12 +226,17 @@
             font-weight: 700;
             font-size: 22px;
         }
-        .friend-info { flex: 1; }
+
+        .friend-info {
+            flex: 1;
+        }
+
         .friend-name {
             font-weight: 700;
             font-size: 16px;
             color: var(--text-dark);
         }
+
         .friend-username {
             font-size: 12px;
             color: var(--text-gray);
@@ -211,6 +250,7 @@
             margin-bottom: 24px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
         }
+
         .add-form input, .add-form textarea {
             width: 100%;
             padding: 12px;
@@ -220,19 +260,23 @@
             margin-bottom: 10px;
             font-family: inherit;
         }
+
         .add-form textarea {
             resize: vertical;
             min-height: 70px;
         }
+
         .photo-preview {
             margin: 10px 0;
             text-align: center;
         }
+
         .photo-preview img {
             max-width: 100%;
             max-height: 150px;
             border-radius: 16px;
         }
+
         .file-picker-btn {
             background: var(--orange-light);
             color: var(--orange);
@@ -247,6 +291,7 @@
             margin-bottom: 10px;
             border: 1.5px dashed var(--orange);
         }
+
         .add-btn {
             background: var(--orange);
             color: white;
@@ -270,6 +315,7 @@
             z-index: 1000;
             padding: 20px;
         }
+
         .modal-content {
             background: var(--white);
             border-radius: 28px;
@@ -277,6 +323,7 @@
             margin: 60px auto;
             overflow: hidden;
         }
+
         .modal-image {
             width: 100%;
             height: 240px;
@@ -286,32 +333,41 @@
             justify-content: center;
             font-size: 60px;
         }
+
         .modal-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .modal-info { padding: 20px; }
+
+        .modal-info {
+            padding: 20px;
+        }
+
         .modal-title {
             font-size: 20px;
             font-weight: 700;
         }
+
         .modal-price {
             font-size: 18px;
             font-weight: 700;
             color: var(--orange);
             margin: 8px 0;
         }
+
         .modal-desc {
             color: var(--text-gray);
             margin-bottom: 20px;
             font-size: 14px;
         }
+
         .modal-buttons {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
+
         .modal-btn {
             flex: 1;
             background: var(--orange);
@@ -322,6 +378,7 @@
             font-weight: 600;
             cursor: pointer;
         }
+
         .close-modal {
             position: absolute;
             top: 16px;
@@ -335,6 +392,7 @@
             font-size: 24px;
             cursor: pointer;
         }
+
         .back-btn {
             background: var(--orange-light);
             color: var(--orange);
@@ -346,11 +404,13 @@
             width: 100%;
             cursor: pointer;
         }
+
         .loading, .empty {
             text-align: center;
             padding: 40px 20px;
             color: var(--text-gray);
         }
+
         .upload-status {
             font-size: 12px;
             color: var(--orange);
@@ -424,46 +484,39 @@
             loadFriendsList();
         }
         
+        // ПРАВИЛЬНЫЙ МЕТОД ДЛЯ ВЫБОРА ФОТО В TELEGRAM MINI APP
         async function pickPhoto() {
             try {
-                const result = await tg.showFilePicker({
+                const result = await tg.showMediaPicker({
                     types: ['image'],
                     multiple: false
                 });
                 
-                console.log('showFilePicker результат:', result);
+                console.log('showMediaPicker результат:', result);
                 
                 if (result && result.files && result.files.length > 0) {
                     const file = result.files[0];
                     console.log('Выбран файл:', file);
                     
                     const statusDiv = document.getElementById('uploadStatus');
-                    statusDiv.innerHTML = '⏳ Загрузка фото в Telegram Cloud...';
+                    statusDiv.innerHTML = '⏳ Загрузка фото...';
                     
-                    try {
-                        const uploaded = await tg.uploadFile(file);
-                        console.log('uploadFile результат:', uploaded);
-                        
-                        if (uploaded && uploaded.url) {
-                            selectedPhotoUrl = uploaded.url;
-                            const preview = document.getElementById('photoPreview');
-                            preview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр">`;
-                            statusDiv.innerHTML = '✅ Фото загружено!';
-                            setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
-                        } else {
-                            statusDiv.innerHTML = '❌ Нет url в ответе';
-                            console.error('Нет url:', uploaded);
-                        }
-                    } catch (uploadError) {
-                        console.error('Ошибка uploadFile:', uploadError);
-                        statusDiv.innerHTML = '❌ Ошибка загрузки: ' + uploadError.message;
+                    const uploaded = await tg.uploadFile(file);
+                    console.log('uploadFile результат:', uploaded);
+                    
+                    if (uploaded && uploaded.url) {
+                        selectedPhotoUrl = uploaded.url;
+                        const preview = document.getElementById('photoPreview');
+                        preview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр">`;
+                        statusDiv.innerHTML = '✅ Фото загружено!';
+                        setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
+                    } else {
+                        statusDiv.innerHTML = '❌ Нет url';
                     }
-                } else {
-                    console.log('Файл не выбран или результат пустой');
                 }
-            } catch (pickerError) {
-                console.error('Ошибка showFilePicker:', pickerError);
-                alert('Ошибка выбора фото: ' + pickerError.message);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка: ' + error.message);
             }
         }
         
