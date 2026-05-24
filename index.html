@@ -23,7 +23,6 @@
             --orange: #FF6B00;
             --orange-dark: #E55A00;
             --orange-light: #FFF0E5;
-            --orange-soft: #FFE0CC;
             --green: #34C759;
             --green-light: #E5F5E8;
             --red: #FF3B30;
@@ -435,7 +434,8 @@
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
             
-            <button class="file-picker-btn" onclick="pickPhoto()">📸 Выбрать фото</button>
+            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+            <button class="file-picker-btn" onclick="document.getElementById('photoInput').click()">📸 Выбрать фото</button>
             <div id="photoPreview" class="photo-preview"></div>
             <div id="uploadStatus" class="upload-status"></div>
             
@@ -484,39 +484,39 @@
             loadFriendsList();
         }
         
-        // ПРАВИЛЬНЫЙ МЕТОД ДЛЯ ВЫБОРА ФОТО В TELEGRAM MINI APP
-        async function pickPhoto() {
+        // Загрузка фото на сервер Саши
+        async function uploadPhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const statusDiv = document.getElementById('uploadStatus');
+            const previewDiv = document.getElementById('photoPreview');
+            
+            statusDiv.innerHTML = '⏳ Загрузка фото...';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
             try {
-                const result = await tg.showMediaPicker({
-                    types: ['image'],
-                    multiple: false
+                const response = await fetch(`${API_BASE}/upload_photo`, {
+                    method: 'POST',
+                    body: formData
                 });
                 
-                console.log('showMediaPicker результат:', result);
+                const data = await response.json();
+                console.log('Ответ сервера:', data);
                 
-                if (result && result.files && result.files.length > 0) {
-                    const file = result.files[0];
-                    console.log('Выбран файл:', file);
-                    
-                    const statusDiv = document.getElementById('uploadStatus');
-                    statusDiv.innerHTML = '⏳ Загрузка фото...';
-                    
-                    const uploaded = await tg.uploadFile(file);
-                    console.log('uploadFile результат:', uploaded);
-                    
-                    if (uploaded && uploaded.url) {
-                        selectedPhotoUrl = uploaded.url;
-                        const preview = document.getElementById('photoPreview');
-                        preview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр">`;
-                        statusDiv.innerHTML = '✅ Фото загружено!';
-                        setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
-                    } else {
-                        statusDiv.innerHTML = '❌ Нет url';
-                    }
+                if (data && data.url) {
+                    selectedPhotoUrl = data.url;
+                    previewDiv.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр">`;
+                    statusDiv.innerHTML = '✅ Фото загружено!';
+                    setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
+                } else {
+                    statusDiv.innerHTML = '❌ Ошибка: нет url в ответе';
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
-                alert('Ошибка: ' + error.message);
+                console.error('Ошибка загрузки:', error);
+                statusDiv.innerHTML = '❌ Ошибка: ' + error.message;
             }
         }
         
@@ -742,6 +742,7 @@
                 document.getElementById('itemLink').value = '';
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('photoPreview').innerHTML = '';
+                document.getElementById('photoInput').value = '';
                 selectedPhotoUrl = null;
                 
                 await loadMyWishlist();
