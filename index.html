@@ -202,18 +202,23 @@
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
+      border: 1.5px solid var(--orange);
     }
 
     .delete-btn {
       background: var(--red-light);
       color: var(--red);
-      border: 1.5px solid var(--red);
+      border-color: var(--red);
     }
 
     .link-btn {
       background: var(--orange-light);
       color: var(--orange);
-      border: 1.5px solid var(--orange);
+    }
+
+    .link-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
 
     .friend-card {
@@ -240,6 +245,7 @@
       font-weight: 700;
       font-size: 22px;
       overflow: hidden;
+      flex-shrink: 0;
     }
 
     .friend-avatar img {
@@ -334,6 +340,11 @@
       cursor: pointer;
     }
 
+    .modal-btn:disabled {
+      background: #777;
+      cursor: not-allowed;
+    }
+
     .close-modal {
       position: absolute;
       right: 16px;
@@ -413,14 +424,27 @@
 
     let myWishlist = [];
     let friendsList = [];
+    let currentFriend = null;
+    let currentFriendWishlist = [];
     let selectedPhotoUrl = '';
     let isPhotoUploading = false;
+
+    let reservedGifts = {};
+    try {
+      reservedGifts = JSON.parse(localStorage.getItem(`reserved_${userId}`) || '{}');
+    } catch (e) {
+      reservedGifts = {};
+    }
 
     if (!userId) {
       alert('Ошибка: открой Mini App через Telegram-бота');
     } else {
       loadMyWishlist();
       loadFriendsList();
+    }
+
+    function saveReservedGifts() {
+      localStorage.setItem(`reserved_${userId}`, JSON.stringify(reservedGifts));
     }
 
     function setAddButtonState() {
@@ -614,7 +638,8 @@
           price: item.price || 0,
           link: item.gift_link || '',
           photo_url: item.photo_url || '',
-          description: item.description || ''
+          description: item.description || '',
+          reserved_by: item.reserved_by || null
         })) : [];
 
         renderMyWishlist();
@@ -634,7 +659,7 @@
 
       container.innerHTML = myWishlist.map((item, index) => `
         <div class="gift-card">
-          <div class="gift-card-content" onclick="openModal(${index})">
+          <div class="gift-card-content" onclick="openMyModal(${index})">
             <div class="gift-image">
               ${
                 item.photo_url
@@ -656,7 +681,7 @@
               <div class="gift-actions">
                 ${
                   item.link
-                    ? `<button class="link-btn" onclick="event.stopPropagation(); openLink('${escapeHtml(item.link)}')">🛒 Где купить</button>`
+                    ? `<button class="link-btn" onclick="event.stopPropagation(); openLink('${escapeHtml(item.link)}')">🛒 Перейти</button>`
                     : ''
                 }
                 <button class="delete-btn" onclick="event.stopPropagation(); deleteGift(${item.id}, ${index})">🗑 Удалить</button>
@@ -667,7 +692,7 @@
       `).join('');
     }
 
-    function openModal(index) {
+    function openMyModal(index) {
       const item = myWishlist[index];
       if (!item) return;
 
@@ -682,17 +707,13 @@
       document.getElementById('modalButtons').innerHTML = `
         ${
           item.link
-            ? `<button class="modal-btn" onclick="openLink('${escapeHtml(item.link)}')">🛒 Где купить</button>`
+            ? `<button class="modal-btn" onclick="openLink('${escapeHtml(item.link)}')">🛒 Перейти</button>`
             : ''
         }
         <button class="modal-btn" style="background:#FF3B30" onclick="deleteGift(${item.id}, ${index}); closeModal();">🗑 Удалить</button>
       `;
 
       document.getElementById('modal').style.display = 'block';
-    }
-
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
     }
 
     async function deleteGift(giftId, index) {
@@ -738,12 +759,13 @@
       }
 
       container.innerHTML = friendsList.map(friend => {
+        const friendId = friend.user_id || friend.id;
         const name = friend.first_name || friend.name || 'Друг';
         const username = friend.username || '';
         const photo = friend.photo_url || '';
 
         return `
-          <div class="friend-card">
+          <div class="friend-card" onclick="loadFriendWishlist(${friendId}, '${escapeHtml(name)}', '${escapeHtml(username)}')">
             <div class="friend-avatar">
               ${
                 photo
@@ -760,12 +782,218 @@
                   : ''
               }
             </div>
+
+            <div style="color:var(--orange);font-size:24px;">›</div>
           </div>
         `;
       }).join('');
     }
 
+    async function loadFriendWishlist(friendId, friendName, friendUsername) {
+      currentFriend = {
+        id: friendId,
+        name: friendName,
+        username: friendUsername
+      };
+
+      document.querySelector('.header').innerHTML = `
+        <h1>🎁 Вишлист</h1>
+        <p>${escapeHtml(friendName)}</p>
+      `;
+
+      const container = document.getElementById('friendsList');
+      container.innerHTML = '<div class="loading">Загрузка подарков...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/wishlist/${friendId}`);
+        const data = await res.json();
+
+        currentFriendWishlist = Array.isArray(data) ? data.map(item => ({
+          id: item.id,
+          name: item.gift_name || item.name || 'Без названия',
+          price: item.price || 0,
+          link: item.gift_link || '',
+          photo_url: item.photo_url || '',
+          description: item.description || '',
+          reserved_by: item.reserved_by || null
+        })) : [];
+
+        renderFriendWishlist();
+
+      } catch (e) {
+        container.innerHTML = '<div class="empty">Ошибка загрузки вишлиста друга</div>';
+      }
+    }
+
+    function renderFriendWishlist() {
+      const container = document.getElementById('friendsList');
+
+      if (!currentFriendWishlist.length) {
+        container.innerHTML = `
+          <button class="add-btn" onclick="backToFriends()">← Назад к друзьям</button>
+          <div class="empty">🎁 У ${escapeHtml(currentFriend.name)} пока нет подарков</div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <button class="add-btn" style="margin-bottom:16px;" onclick="backToFriends()">← Назад к друзьям</button>
+
+        ${currentFriendWishlist.map((item, index) => {
+          const isReservedByMe = reservedGifts[item.id] === true || String(item.reserved_by) === String(userId);
+          const isReservedByOther = item.reserved_by && String(item.reserved_by) !== String(userId);
+          const isReserved = isReservedByMe || isReservedByOther;
+
+          return `
+            <div class="gift-card">
+              <div class="gift-card-content" onclick="openFriendModal(${index})">
+                <div class="gift-image">
+                  ${
+                    item.photo_url
+                      ? `<img src="${escapeHtml(item.photo_url)}" onerror="this.parentElement.innerHTML='🎁'">`
+                      : '🎁'
+                  }
+                </div>
+
+                <div class="gift-details">
+                  <div class="gift-title">${escapeHtml(item.name)}</div>
+                  <div class="gift-price">${escapeHtml(item.price)} ₽</div>
+
+                  ${
+                    item.description
+                      ? `<div class="gift-desc">${escapeHtml(item.description)}</div>`
+                      : ''
+                  }
+
+                  <div class="gift-actions">
+                    ${
+                      !isReserved
+                        ? `<button class="link-btn" onclick="event.stopPropagation(); reserveGift(${item.id}, ${currentFriend.id})">🎁 Забронировать</button>`
+                        : `<button class="link-btn" disabled>✅ ${isReservedByMe ? 'Ваш резерв' : 'Занято'}</button>`
+                    }
+
+                    <button class="link-btn" onclick="event.stopPropagation(); copyToMe(${item.id})">📋 Добавить к себе</button>
+
+                    ${
+                      item.link
+                        ? `<button class="link-btn" onclick="event.stopPropagation(); openLink('${escapeHtml(item.link)}')">🛒 Перейти</button>`
+                        : ''
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function openFriendModal(index) {
+      const item = currentFriendWishlist[index];
+      if (!item) return;
+
+      const isReservedByMe = reservedGifts[item.id] === true || String(item.reserved_by) === String(userId);
+      const isReservedByOther = item.reserved_by && String(item.reserved_by) !== String(userId);
+      const isReserved = isReservedByMe || isReservedByOther;
+
+      document.getElementById('modalTitle').innerText = item.name;
+      document.getElementById('modalPrice').innerText = `${item.price} ₽`;
+      document.getElementById('modalDesc').innerText = item.description || 'Нет описания';
+
+      document.getElementById('modalImage').innerHTML = item.photo_url
+        ? `<img src="${escapeHtml(item.photo_url)}">`
+        : '🎁';
+
+      document.getElementById('modalButtons').innerHTML = `
+        ${
+          !isReserved
+            ? `<button class="modal-btn" onclick="reserveGift(${item.id}, ${currentFriend.id}); closeModal();">🎁 Забронировать</button>`
+            : `<button class="modal-btn" disabled>✅ ${isReservedByMe ? 'Ваш резерв' : 'Занято'}</button>`
+        }
+
+        <button class="modal-btn" onclick="copyToMe(${item.id}); closeModal();">📋 Добавить к себе</button>
+
+        ${
+          item.link
+            ? `<button class="modal-btn" onclick="openLink('${escapeHtml(item.link)}')">🛒 Перейти</button>`
+            : ''
+        }
+      `;
+
+      document.getElementById('modal').style.display = 'block';
+    }
+
+    async function reserveGift(giftId, friendId) {
+      reservedGifts[giftId] = true;
+      saveReservedGifts();
+      renderFriendWishlist();
+
+      try {
+        await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reserved_by: userId })
+        });
+      } catch (e) {
+        console.log('Резерв сохранён локально');
+      }
+    }
+
+    async function copyToMe(giftId) {
+      const gift = currentFriendWishlist.find(g => g.id === giftId);
+      if (!gift) return;
+
+      const giftData = {
+        gift_name: gift.name,
+        price: parseInt(gift.price, 10) || 0,
+        photo_url: gift.photo_url || '',
+        gift_link: gift.link || '',
+        description: gift.description || '',
+        visibility: 'all'
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/wishlist/${userId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(giftData)
+        });
+
+        if (!res.ok) {
+          throw new Error('Ошибка добавления');
+        }
+
+        tg.showAlert('Подарок добавлен к тебе ✨');
+        await loadMyWishlist();
+
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    }
+
+    function backToFriends() {
+      currentFriend = null;
+      currentFriendWishlist = [];
+
+      document.querySelector('.header').innerHTML = `
+        <h1>🎁 Мой вишлист</h1>
+        <p>Подарки, которые я хочу получить</p>
+      `;
+
+      renderFriendsList();
+    }
+
     function switchTab(tab) {
+      if (tab === 'my') {
+        currentFriend = null;
+        currentFriendWishlist = [];
+
+        document.querySelector('.header').innerHTML = `
+          <h1>🎁 Мой вишлист</h1>
+          <p>Подарки, которые я хочу получить</p>
+        `;
+      }
+
       document.querySelectorAll('.tab').forEach((el, index) => {
         el.classList.toggle('active', tab === 'my' ? index === 0 : index === 1);
       });
@@ -776,6 +1004,10 @@
       if (tab === 'friends') {
         loadFriendsList();
       }
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
     }
 
     function openLink(url) {
