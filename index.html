@@ -13,7 +13,6 @@
       --orange: #FF6B00;
       --orange-light: #FFF0E5;
       --green: #34C759;
-      --green-light: #E5F5E8;
       --red: #FF3B30;
       --red-light: #FFE5E5;
       --text-dark: #1A1A1A;
@@ -701,7 +700,7 @@
       document.getElementById('modalDesc').innerText = item.description || 'Нет описания';
 
       document.getElementById('modalImage').innerHTML = item.photo_url
-        ? `<img src="${escapeHtml(item.photo_url)}">`
+        ? `<img src="${escapeHtml(item.photo_url)}" onerror="this.parentElement.innerHTML='🎁'">`
         : '🎁';
 
       document.getElementById('modalButtons').innerHTML = `
@@ -769,7 +768,7 @@
             <div class="friend-avatar">
               ${
                 photo
-                  ? `<img src="${escapeHtml(photo)}">`
+                  ? `<img src="${escapeHtml(photo)}" onerror="this.parentElement.innerHTML='${escapeHtml(name[0] || '?')}'">`
                   : escapeHtml(name[0] || '?')
               }
             </div>
@@ -901,7 +900,7 @@
       document.getElementById('modalDesc').innerText = item.description || 'Нет описания';
 
       document.getElementById('modalImage').innerHTML = item.photo_url
-        ? `<img src="${escapeHtml(item.photo_url)}">`
+        ? `<img src="${escapeHtml(item.photo_url)}" onerror="this.parentElement.innerHTML='🎁'">`
         : '🎁';
 
       document.getElementById('modalButtons').innerHTML = `
