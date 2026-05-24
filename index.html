@@ -6,11 +6,7 @@
     <title>Вишлист</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
@@ -33,21 +29,9 @@
             --white: #FFFFFF;
         }
 
-        .header {
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .header p {
-            color: var(--text-gray);
-            font-size: 13px;
-            margin-top: 4px;
-        }
+        .header { margin-bottom: 20px; }
+        .header h1 { font-size: 28px; font-weight: 700; color: var(--text-dark); }
+        .header p { color: var(--text-gray); font-size: 13px; margin-top: 4px; }
 
         .back-header {
             display: flex;
@@ -55,7 +39,6 @@
             gap: 12px;
             margin-bottom: 20px;
         }
-
         .back-header button {
             background: var(--orange-light);
             border: none;
@@ -76,7 +59,6 @@
             border-radius: 40px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
-
         .tab {
             flex: 1;
             text-align: center;
@@ -88,7 +70,6 @@
             background: transparent;
             color: var(--text-gray);
         }
-
         .tab.active {
             background: var(--orange);
             color: white;
@@ -101,37 +82,30 @@
             overflow: hidden;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
         }
-
         .gift-card-content {
             display: flex;
             padding: 14px;
             gap: 14px;
         }
-
         .gift-image {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             background: #F5F5F5;
             border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+            font-size: 44px;
             flex-shrink: 0;
             overflow: hidden;
             cursor: pointer;
         }
-
         .gift-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
-        .gift-details {
-            flex: 1;
-        }
-
+        .gift-details { flex: 1; }
         .gift-title {
             font-weight: 700;
             font-size: 15px;
@@ -139,7 +113,6 @@
             margin-bottom: 4px;
             cursor: pointer;
         }
-
         .gift-price {
             font-weight: 700;
             font-size: 18px;
@@ -147,13 +120,11 @@
             margin: 6px 0;
             cursor: pointer;
         }
-
         .gift-desc {
             font-size: 12px;
             color: var(--text-gray);
             margin-top: 4px;
         }
-
         .gift-link-btn {
             background: transparent;
             padding: 6px 14px;
@@ -167,7 +138,6 @@
             align-items: center;
             gap: 6px;
         }
-
         .delete-btn {
             background: var(--red-light);
             padding: 6px 14px;
@@ -182,14 +152,12 @@
             gap: 6px;
             margin-left: 8px;
         }
-
         .gift-actions {
             display: flex;
             gap: 8px;
             margin-top: 8px;
             flex-wrap: wrap;
         }
-
         .action-btn {
             background: transparent;
             padding: 6px 12px;
@@ -212,7 +180,6 @@
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
-
         .friend-avatar {
             width: 52px;
             height: 52px;
@@ -225,17 +192,12 @@
             font-weight: 700;
             font-size: 22px;
         }
-
-        .friend-info {
-            flex: 1;
-        }
-
+        .friend-info { flex: 1; }
         .friend-name {
             font-weight: 700;
             font-size: 16px;
             color: var(--text-dark);
         }
-
         .friend-username {
             font-size: 12px;
             color: var(--text-gray);
@@ -249,7 +211,6 @@
             margin-bottom: 24px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
         }
-
         .add-form input, .add-form textarea {
             width: 100%;
             padding: 12px;
@@ -259,23 +220,19 @@
             margin-bottom: 10px;
             font-family: inherit;
         }
-
         .add-form textarea {
             resize: vertical;
             min-height: 70px;
         }
-
         .photo-preview {
             margin: 10px 0;
             text-align: center;
         }
-
         .photo-preview img {
             max-width: 100%;
-            max-height: 120px;
+            max-height: 150px;
             border-radius: 16px;
         }
-
         .file-picker-btn {
             background: var(--orange-light);
             color: var(--orange);
@@ -290,7 +247,6 @@
             margin-bottom: 10px;
             border: 1.5px dashed var(--orange);
         }
-
         .add-btn {
             background: var(--orange);
             color: white;
@@ -314,7 +270,6 @@
             z-index: 1000;
             padding: 20px;
         }
-
         .modal-content {
             background: var(--white);
             border-radius: 28px;
@@ -322,7 +277,6 @@
             margin: 60px auto;
             overflow: hidden;
         }
-
         .modal-image {
             width: 100%;
             height: 240px;
@@ -332,41 +286,32 @@
             justify-content: center;
             font-size: 60px;
         }
-
         .modal-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
-        .modal-info {
-            padding: 20px;
-        }
-
+        .modal-info { padding: 20px; }
         .modal-title {
             font-size: 20px;
             font-weight: 700;
         }
-
         .modal-price {
             font-size: 18px;
             font-weight: 700;
             color: var(--orange);
             margin: 8px 0;
         }
-
         .modal-desc {
             color: var(--text-gray);
             margin-bottom: 20px;
             font-size: 14px;
         }
-
         .modal-buttons {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-
         .modal-btn {
             flex: 1;
             background: var(--orange);
@@ -377,7 +322,6 @@
             font-weight: 600;
             cursor: pointer;
         }
-
         .close-modal {
             position: absolute;
             top: 16px;
@@ -391,7 +335,6 @@
             font-size: 24px;
             cursor: pointer;
         }
-
         .back-btn {
             background: var(--orange-light);
             color: var(--orange);
@@ -403,11 +346,16 @@
             width: 100%;
             cursor: pointer;
         }
-
         .loading, .empty {
             text-align: center;
             padding: 40px 20px;
             color: var(--text-gray);
+        }
+        .upload-status {
+            font-size: 12px;
+            color: var(--orange);
+            text-align: center;
+            margin: 8px 0;
         }
     </style>
 </head>
@@ -427,9 +375,9 @@
             <input type="text" id="itemName" placeholder="Название подарка">
             <input type="text" id="itemPrice" placeholder="Цена">
             
-            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="compressAndPreview(this)">
-            <button class="file-picker-btn" onclick="document.getElementById('photoInput').click()">📸 Выбрать фото</button>
+            <button class="file-picker-btn" onclick="pickPhoto()">📸 Выбрать фото</button>
             <div id="photoPreview" class="photo-preview"></div>
+            <div id="uploadStatus" class="upload-status"></div>
             
             <input type="text" id="itemLink" placeholder="Ссылка где купить (необязательно)">
             <textarea id="itemDesc" placeholder="Описание подарка (необязательно)"></textarea>
@@ -467,7 +415,7 @@
         let friendsList = [];
         let currentFriend = null;
         let currentFriendWishlist = [];
-        let selectedPhotoBase64 = null;
+        let selectedPhotoUrl = null;
         
         if (!userId) {
             alert('Ошибка: не определён пользователь');
@@ -476,40 +424,47 @@
             loadFriendsList();
         }
         
-        function compressAndPreview(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    // Максимальная ширина 150px (очень маленькое фото)
-                    const maxWidth = 150;
-                    let width = img.width;
-                    let height = img.height;
+        async function pickPhoto() {
+            try {
+                const result = await tg.showFilePicker({
+                    types: ['image'],
+                    multiple: false
+                });
+                
+                console.log('showFilePicker результат:', result);
+                
+                if (result && result.files && result.files.length > 0) {
+                    const file = result.files[0];
+                    console.log('Выбран файл:', file);
                     
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
+                    const statusDiv = document.getElementById('uploadStatus');
+                    statusDiv.innerHTML = '⏳ Загрузка фото в Telegram Cloud...';
+                    
+                    try {
+                        const uploaded = await tg.uploadFile(file);
+                        console.log('uploadFile результат:', uploaded);
+                        
+                        if (uploaded && uploaded.url) {
+                            selectedPhotoUrl = uploaded.url;
+                            const preview = document.getElementById('photoPreview');
+                            preview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр">`;
+                            statusDiv.innerHTML = '✅ Фото загружено!';
+                            setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
+                        } else {
+                            statusDiv.innerHTML = '❌ Нет url в ответе';
+                            console.error('Нет url:', uploaded);
+                        }
+                    } catch (uploadError) {
+                        console.error('Ошибка uploadFile:', uploadError);
+                        statusDiv.innerHTML = '❌ Ошибка загрузки: ' + uploadError.message;
                     }
-                    
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Качество 0.6 (60%)
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    selectedPhotoBase64 = compressedBase64;
-                    
-                    const preview = document.getElementById('photoPreview');
-                    preview.innerHTML = `<img src="${compressedBase64}" alt="Предпросмотр">`;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+                } else {
+                    console.log('Файл не выбран или результат пустой');
+                }
+            } catch (pickerError) {
+                console.error('Ошибка showFilePicker:', pickerError);
+                alert('Ошибка выбора фото: ' + pickerError.message);
+            }
         }
         
         function updateHeaderForFriend(friendName = null) {
@@ -714,7 +669,7 @@
                 price: price ? parseInt(price) : 0, 
                 visibility: "all",
                 gift_link: link || '',
-                photo_url: selectedPhotoBase64 || '',
+                photo_url: selectedPhotoUrl || '',
                 description: description || ''
             };
             
@@ -734,8 +689,7 @@
                 document.getElementById('itemLink').value = '';
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('photoPreview').innerHTML = '';
-                document.getElementById('photoInput').value = '';
-                selectedPhotoBase64 = null;
+                selectedPhotoUrl = null;
                 
                 await loadMyWishlist();
                 alert('Подарок добавлен!');
