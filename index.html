@@ -6,416 +6,140 @@
     <title>Вишлист</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
             background: #FEFAF5;
             padding: 16px;
             padding-bottom: 40px;
         }
-
         :root {
-            --orange: #FF6B00;
-            --orange-dark: #E55A00;
-            --orange-light: #FFF0E5;
-            --green: #34C759;
-            --green-light: #E5F5E8;
-            --red: #FF3B30;
-            --red-light: #FFE5E5;
-            --text-dark: #1A1A1A;
-            --text-gray: #666666;
-            --border: #EEEEEE;
-            --white: #FFFFFF;
+            --orange: #FF6B00; --orange-dark: #E55A00; --orange-light: #FFF0E5;
+            --green: #34C759; --green-light: #E5F5E8; --red: #FF3B30; --red-light: #FFE5E5;
+            --text-dark: #1A1A1A; --text-gray: #666666; --border: #EEEEEE; --white: #FFFFFF;
         }
-
-        .header {
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .header p {
-            color: var(--text-gray);
-            font-size: 13px;
-            margin-top: 4px;
-        }
-
-        .back-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
+        .header { margin-bottom: 20px; }
+        .header h1 { font-size: 28px; font-weight: 700; color: var(--text-dark); }
+        .header p { color: var(--text-gray); font-size: 13px; margin-top: 4px; }
+        .back-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
         .back-header button {
-            background: var(--orange-light);
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 18px;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--orange);
+            background: var(--orange-light); border: none; width: 36px; height: 36px;
+            border-radius: 18px; font-size: 20px; cursor: pointer; color: var(--orange);
         }
-
         .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: var(--white);
-            padding: 4px;
-            border-radius: 40px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex; gap: 8px; margin-bottom: 24px; background: var(--white);
+            padding: 4px; border-radius: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-
         .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px 0;
-            border-radius: 36px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            background: transparent;
-            color: var(--text-gray);
+            flex: 1; text-align: center; padding: 10px 0; border-radius: 36px;
+            font-weight: 600; font-size: 14px; cursor: pointer; background: transparent; color: var(--text-gray);
         }
-
-        .tab.active {
-            background: var(--orange);
-            color: white;
-        }
-
+        .tab.active { background: var(--orange); color: white; }
         .gift-card {
-            background: var(--white);
-            border-radius: 24px;
-            margin-bottom: 16px;
-            overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            background: var(--white); border-radius: 24px; margin-bottom: 16px;
+            overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
-
-        .gift-card-content {
-            display: flex;
-            padding: 14px;
-            gap: 14px;
-        }
-
+        .gift-card-content { display: flex; padding: 14px; gap: 14px; }
         .gift-image {
-            width: 100px;
-            height: 100px;
-            background: #F5F5F5;
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 44px;
-            flex-shrink: 0;
-            overflow: hidden;
-            cursor: pointer;
+            width: 100px; height: 100px; background: #F5F5F5; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center; font-size: 44px;
+            flex-shrink: 0; overflow: hidden; cursor: pointer; position: relative;
         }
-
-        .gift-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .gift-image img { width: 100%; height: 100%; object-fit: cover; }
+        .reserved-badge {
+            position: absolute; top: 8px; right: 8px; background: var(--green);
+            color: white; font-size: 10px; font-weight: 700; padding: 4px 8px;
+            border-radius: 12px; z-index: 2;
         }
-
-        .gift-details {
-            flex: 1;
-        }
-
-        .gift-title {
-            font-weight: 700;
-            font-size: 15px;
-            color: var(--text-dark);
-            margin-bottom: 4px;
-            cursor: pointer;
-        }
-
-        .gift-price {
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--orange);
-            margin: 6px 0;
-            cursor: pointer;
-        }
-
-        .gift-desc {
-            font-size: 12px;
-            color: var(--text-gray);
-            margin-top: 4px;
-        }
-
+        .gift-details { flex: 1; }
+        .gift-title { font-weight: 700; font-size: 15px; color: var(--text-dark); margin-bottom: 4px; cursor: pointer; }
+        .gift-price { font-weight: 700; font-size: 18px; color: var(--orange); margin: 6px 0; cursor: pointer; }
+        .gift-desc { font-size: 12px; color: var(--text-gray); margin-top: 4px; }
         .gift-link-btn {
-            background: transparent;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--orange);
-            cursor: pointer;
-            border: 1.5px solid var(--orange);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            background: transparent; padding: 6px 14px; border-radius: 30px; font-size: 12px;
+            font-weight: 600; color: var(--orange); cursor: pointer; border: 1.5px solid var(--orange);
+            display: inline-flex; align-items: center; gap: 6px;
         }
-
         .delete-btn {
-            background: var(--red-light);
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--red);
-            cursor: pointer;
-            border: 1.5px solid var(--red);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-left: 8px;
+            background: var(--red-light); padding: 6px 14px; border-radius: 30px; font-size: 12px;
+            font-weight: 600; color: var(--red); cursor: pointer; border: 1.5px solid var(--red);
+            display: inline-flex; align-items: center; gap: 6px; margin-left: 8px;
         }
-
-        .gift-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
+        .gift-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
         .action-btn {
-            background: transparent;
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--orange);
-            cursor: pointer;
-            border: 1.5px solid var(--orange);
+            background: transparent; padding: 6px 12px; border-radius: 30px; font-size: 11px;
+            font-weight: 600; color: var(--orange); cursor: pointer; border: 1.5px solid var(--orange);
         }
-
+        .action-btn.reserved {
+            background: var(--green-light); color: var(--green); border-color: var(--green);
+        }
         .friend-card {
-            background: var(--white);
-            border-radius: 20px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            background: var(--white); border-radius: 20px; padding: 12px 16px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 14px; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-
         .friend-avatar {
-            width: 52px;
-            height: 52px;
-            background: var(--orange);
-            border-radius: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 22px;
+            width: 52px; height: 52px; border-radius: 26px; display: flex;
+            align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 22px;
+            overflow: hidden; flex-shrink: 0;
         }
-
-        .friend-info {
-            flex: 1;
-        }
-
-        .friend-name {
-            font-weight: 700;
-            font-size: 16px;
-            color: var(--text-dark);
-        }
-
-        .friend-username {
-            font-size: 12px;
-            color: var(--text-gray);
-            margin-top: 2px;
-        }
-
+        .friend-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .friend-info { flex: 1; }
+        .friend-name { font-weight: 700; font-size: 16px; color: var(--text-dark); }
+        .friend-username { font-size: 12px; color: var(--text-gray); margin-top: 2px; }
         .add-form {
-            background: var(--white);
-            border-radius: 24px;
-            padding: 16px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            background: var(--white); border-radius: 24px; padding: 16px; margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
-
         .add-form input, .add-form textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            font-size: 14px;
-            margin-bottom: 10px;
-            font-family: inherit;
+            width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 14px;
+            font-size: 14px; margin-bottom: 10px; font-family: inherit;
         }
-
-        .add-form textarea {
-            resize: vertical;
-            min-height: 70px;
-        }
-
-        .photo-preview {
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        .photo-preview img {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 16px;
-        }
-
+        .add-form textarea { resize: vertical; min-height: 70px; }
+        .photo-preview { margin: 10px 0; text-align: center; }
+        .photo-preview img { max-width: 100%; max-height: 150px; border-radius: 16px; }
         .file-picker-btn {
-            background: var(--orange-light);
-            color: var(--orange);
-            padding: 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            display: inline-block;
-            width: 100%;
-            text-align: center;
-            margin-bottom: 10px;
-            border: 1.5px dashed var(--orange);
+            background: var(--orange-light); color: var(--orange); padding: 12px; border-radius: 20px;
+            font-weight: 600; font-size: 14px; cursor: pointer; display: inline-block; width: 100%;
+            text-align: center; margin-bottom: 10px; border: 1.5px dashed var(--orange);
         }
-
         .add-btn {
-            background: var(--orange);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            width: 100%;
+            background: var(--orange); color: white; border: none; padding: 12px; border-radius: 20px;
+            font-weight: 700; font-size: 14px; cursor: pointer; width: 100%;
         }
-
         .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 1000;
-            padding: 20px;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); z-index: 1000; padding: 20px;
         }
-
         .modal-content {
-            background: var(--white);
-            border-radius: 28px;
-            max-width: 400px;
-            margin: 60px auto;
-            overflow: hidden;
+            background: var(--white); border-radius: 28px; max-width: 400px;
+            margin: 60px auto; overflow: hidden;
         }
-
         .modal-image {
-            width: 100%;
-            height: 240px;
-            background: #F5F5F5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
+            width: 100%; height: 240px; background: #F5F5F5; display: flex;
+            align-items: center; justify-content: center; font-size: 60px;
         }
-
-        .modal-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .modal-info {
-            padding: 20px;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .modal-price {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--orange);
-            margin: 8px 0;
-        }
-
-        .modal-desc {
-            color: var(--text-gray);
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
+        .modal-image img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-info { padding: 20px; }
+        .modal-title { font-size: 20px; font-weight: 700; }
+        .modal-price { font-size: 18px; font-weight: 700; color: var(--orange); margin: 8px 0; }
+        .modal-desc { color: var(--text-gray); margin-bottom: 20px; font-size: 14px; }
+        .modal-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .modal-btn {
-            flex: 1;
-            background: var(--orange);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            cursor: pointer;
+            flex: 1; background: var(--orange); color: white; border: none; padding: 12px;
+            border-radius: 20px; font-weight: 600; cursor: pointer;
         }
-
         .close-modal {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            border: none;
-            width: 38px;
-            height: 38px;
-            border-radius: 19px;
-            font-size: 24px;
-            cursor: pointer;
+            position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.5);
+            color: white; border: none; width: 38px; height: 38px; border-radius: 19px;
+            font-size: 24px; cursor: pointer;
         }
-
         .back-btn {
-            background: var(--orange-light);
-            color: var(--orange);
-            border: none;
-            padding: 10px;
-            border-radius: 30px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            width: 100%;
-            cursor: pointer;
+            background: var(--orange-light); color: var(--orange); border: none; padding: 10px;
+            border-radius: 30px; font-weight: 600; margin-bottom: 16px; width: 100%; cursor: pointer;
         }
-
-        .loading, .empty {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-gray);
-        }
-
-        .upload-status {
-            font-size: 12px;
-            color: var(--orange);
-            text-align: center;
-            margin: 8px 0;
-        }
+        .loading, .empty { text-align: center; padding: 40px 20px; color: var(--text-gray); }
+        .upload-status { font-size: 12px; color: var(--orange); text-align: center; margin: 8px 0; }
     </style>
 </head>
 <body>
@@ -476,23 +200,75 @@
         let currentFriend = null;
         let currentFriendWishlist = [];
         let selectedPhotoUrl = null;
+        let reservedGifts = {}; // { [giftId]: true }
+        
+        // 🔹 Загружаем зарезервированные подарки из localStorage при старте
+        function loadReservedGifts() {
+            try {
+                const saved = localStorage.getItem(`reserved_${userId}`);
+                if (saved) reservedGifts = JSON.parse(saved);
+            } catch(e) { console.error('Ошибка загрузки резервов:', e); }
+        }
+        
+        // 🔹 Сохраняем статус резерва в localStorage
+        function saveReservedGifts() {
+            try {
+                localStorage.setItem(`reserved_${userId}`, JSON.stringify(reservedGifts));
+            } catch(e) { console.error('Ошибка сохранения резервов:', e); }
+        }
+        
+        // 🔹 Генерация цвета аватара по юзернейму
+        function getAvatarColor(username) {
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#FF6B00', '#54A0FF'];
+            if (!username) return colors[0];
+            let hash = 0;
+            for (let i = 0; i < username.length; i++) hash = username.charCodeAt(i) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
+        }
+        
+        // 🔹 Формирование аватара: фото или цветной круг с буквой
+        function renderFriendAvatar(friend) {
+            if (friend.photo_url) {
+                return `<div class="friend-avatar"><img src="${friend.photo_url}" alt="${escapeHtml(friend.first_name || '')}"></div>`;
+            }
+            const initial = (friend.first_name?.[0] || '?').toUpperCase();
+            const color = getAvatarColor(friend.username || friend.first_name);
+            return `<div class="friend-avatar" style="background:${color}">${initial}</div>`;
+        }
         
         if (!userId) {
             alert('Ошибка: не определён пользователь');
         } else {
+            loadReservedGifts(); // 🔹 Загружаем резервы
             loadMyWishlist();
             loadFriendsList();
         }
         
-        // Загрузка фото на сервер Саши
+        // 🔹 Улучшенная загрузка фото
         async function uploadPhoto(input) {
             const file = input.files[0];
             if (!file) return;
             
+            if (!file.type.startsWith('image/')) {
+                document.getElementById('uploadStatus').innerHTML = '❌ Только изображения!';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                document.getElementById('uploadStatus').innerHTML = '❌ Фото больше 5МБ!';
+                return;
+            }
+            
             const statusDiv = document.getElementById('uploadStatus');
             const previewDiv = document.getElementById('photoPreview');
             
-            statusDiv.innerHTML = '⏳ Загрузка фото...';
+            // Предпросмотр сразу
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewDiv.innerHTML = `<img src="${e.target.result}" alt="Предпросмотр">`;
+            };
+            reader.readAsDataURL(file);
+            
+            statusDiv.innerHTML = '⏳ Загрузка...';
             
             const formData = new FormData();
             formData.append('file', file);
@@ -503,12 +279,13 @@
                     body: formData
                 });
                 
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
                 const data = await response.json();
                 console.log('Ответ сервера:', data);
                 
-                if (data && data.url) {
+                if (data?.url) {
                     selectedPhotoUrl = data.url;
-                    previewDiv.innerHTML = `<img src="${selectedPhotoUrl}" alt="Предпросмотр">`;
                     statusDiv.innerHTML = '✅ Фото загружено!';
                     setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
                 } else {
@@ -561,7 +338,8 @@
                     price: item.price || 'не указана',
                     link: item.gift_link || '',
                     photo_url: item.photo_url || '',
-                    description: item.description || ''
+                    description: item.description || '',
+                    reserved_by: item.reserved_by || null // 🔹 Поддержка поля резерва с бэка
                 })) : [];
                 renderMyWishlist();
             } catch(e) {
@@ -572,9 +350,7 @@
         async function deleteGift(giftId, index) {
             if (!confirm('Удалить этот подарок?')) return;
             try {
-                const response = await fetch(`${API_BASE}/wishlist/${userId}/${giftId}`, {
-                    method: 'DELETE'
-                });
+                const response = await fetch(`${API_BASE}/wishlist/${userId}/${giftId}`, { method: 'DELETE' });
                 if (response.ok) {
                     myWishlist.splice(index, 1);
                     renderMyWishlist();
@@ -616,8 +392,19 @@
             try {
                 const res = await fetch(`${API_BASE}/friends/${userId}`);
                 const data = await res.json();
+                
+                // 🔹 Обогащаем данные друзей информацией из Telegram (если есть)
                 if (Array.isArray(data) && data.length > 0) {
-                    friendsList = data;
+                    friendsList = data.map(friend => {
+                        // Пытаемся найти совпадение в initDataUnsafe (если друг открыл мини-апп)
+                        const tgFriend = tg.initDataUnsafe?.users?.find(u => u.id === friend.user_id);
+                        return {
+                            ...friend,
+                            first_name: tgFriend?.first_name || friend.first_name || 'Друг',
+                            username: tgFriend?.username || friend.username || null,
+                            photo_url: tgFriend?.photo_url || friend.photo_url || null
+                        };
+                    });
                 } else {
                     friendsList = [];
                 }
@@ -632,12 +419,12 @@
         function renderFriendsList() {
             const container = document.getElementById('friendsList');
             if (!friendsList.length) {
-                container.innerHTML = '<div class="empty">👋 Пока нет друзей</div>';
+                container.innerHTML = '<div class="empty">👋 Пока нет друзей в вишлисте</div>';
                 return;
             }
             container.innerHTML = friendsList.map(friend => `
                 <div class="friend-card" onclick="loadFriendWishlist(${friend.user_id}, '${escapeHtml(friend.first_name || 'Друг')}', '${escapeHtml(friend.username || '')}')">
-                    <div class="friend-avatar">${(friend.first_name?.[0] || '?').toUpperCase()}</div>
+                    ${renderFriendAvatar(friend)}
                     <div class="friend-info">
                         <div class="friend-name">${escapeHtml(friend.first_name || 'Друг')}</div>
                         ${friend.username ? `<div class="friend-username">@${friend.username}</div>` : ''}
@@ -660,7 +447,8 @@
                     price: item.price || 'не указана',
                     link: item.gift_link || '',
                     photo_url: item.photo_url || '',
-                    description: item.description || ''
+                    description: item.description || '',
+                    reserved_by: item.reserved_by || null // 🔹 Поле резерва с бэка
                 })) : [];
                 renderFriendsWishlist();
             } catch(e) {
@@ -684,30 +472,38 @@
             }
             container.innerHTML = `
                 <button class="back-btn" onclick="backToFriendsList()">← Назад к друзьям</button>
-                ${currentFriendWishlist.map((item, i) => `
+                ${currentFriendWishlist.map((item, i) => {
+                    // 🔹 Проверяем резерв: с бэка или из localStorage
+                    const isReserved = item.reserved_by === userId || reservedGifts[item.id] === true;
+                    const isReservedByMe = item.reserved_by === userId;
+                    const isReservedByOther = item.reserved_by && item.reserved_by !== userId;
+                    
+                    return `
                     <div class="gift-card">
                         <div class="gift-card-content">
                             <div class="gift-image" onclick="openModalFriend(${i})">
                                 ${item.photo_url ? `<img src="${item.photo_url}" onerror="this.parentElement.innerHTML='🎁'">` : '🎁'}
+                                ${isReserved ? `<span class="reserved-badge">${isReservedByMe ? 'Ваш резерв' : 'Занято'}</span>` : ''}
                             </div>
                             <div class="gift-details">
                                 <div class="gift-title" onclick="openModalFriend(${i})">${escapeHtml(item.name)}</div>
                                 <div class="gift-price" onclick="openModalFriend(${i})">${item.price} ₽</div>
                                 <div class="gift-actions">
-                                    <button class="action-btn" onclick="event.stopPropagation(); reserveGift(${item.id}, this)">🎁 Хочу подарить</button>
+                                    ${!isReserved 
+                                        ? `<button class="action-btn" onclick="event.stopPropagation(); reserveGift(${item.id}, ${friendId}, this)">🎁 Хочу подарить</button>` 
+                                        : `<button class="action-btn reserved" disabled>✅ ${isReservedByMe ? 'Зарезервировано вами' : 'Зарезервировано'}</button>`
+                                    }
                                     <button class="action-btn" onclick="event.stopPropagation(); copyToMe(${item.id})">📋 Добавить к себе</button>
                                     ${item.link ? `<button class="gift-link-btn" onclick="event.stopPropagation(); window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
                                 </div>
                             </div>
                         </div>
                     </div>
-                `).join('')}
+                `}).join('')}
             `;
         }
         
-        function openModalFriend(index) {
-            openModal(index, 'friend');
-        }
+        function openModalFriend(index) { openModal(index, 'friend'); }
         
         async function addGift() {
             const name = document.getElementById('itemName').value.trim();
@@ -733,10 +529,9 @@
                     body: JSON.stringify(giftData)
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
+                // Очистка формы
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
                 document.getElementById('itemLink').value = '';
@@ -746,14 +541,34 @@
                 selectedPhotoUrl = null;
                 
                 await loadMyWishlist();
-                alert('Подарок добавлен!');
+                tg.showAlert('Подарок добавлен! 🎉');
             } catch(e) { 
-                alert('Ошибка добавления: ' + e.message);
+                tg.showAlert('Ошибка: ' + e.message);
             }
         }
         
-        function reserveGift(giftId, buttonElement) {
-            alert(`⚠️ Функция резерва подарка будет работать, когда Саша добавит эндпоинт POST /reserve_gift/{wishlist_id}`);
+        // 🔹 Функция резерва подарка (с сохранением в localStorage + отправка на бэк)
+        async function reserveGift(giftId, friendId, buttonElement) {
+            // 1. Сначала сохраняем локально для мгновенного отклика
+            reservedGifts[giftId] = true;
+            saveReservedGifts();
+            renderFriendsWishlist(); // Перерисовываем с новым статусом
+            
+            // 2. Пытаемся отправить на сервер (если Саша добавил эндпоинт)
+            try {
+                const response = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reserved_by: userId })
+                });
+                
+                if (!response.ok) {
+                    // Если эндпоинт ещё не готов — оставляем локальный статус
+                    console.log('Эндпоинт резерва ещё не готов, используется локальное сохранение');
+                }
+            } catch (e) {
+                console.log('Резерв сохранён локально:', e);
+            }
         }
         
         async function copyToMe(giftId) {
@@ -775,10 +590,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(giftData)
                 });
-                alert('Подарок добавлен в ваш вишлист!');
+                tg.showAlert('Подарок добавлен в ваш вишлист! ✨');
                 await loadMyWishlist();
             } catch(e) {
-                alert('Ошибка при копировании: ' + e.message);
+                tg.showAlert('Ошибка: ' + e.message);
             }
         }
         
@@ -797,8 +612,12 @@
                     <button class="modal-btn" style="background:#FF3B30" onclick="deleteGift(${item.id}, ${index}); closeModal();">🗑 Удалить</button>
                 `;
             } else {
+                const isReserved = item.reserved_by === userId || reservedGifts[item.id] === true;
                 buttonsDiv.innerHTML = `
-                    <button class="modal-btn" onclick="reserveGift(${item.id}); closeModal();">🎁 Хочу подарить</button>
+                    ${!isReserved 
+                        ? `<button class="modal-btn" onclick="reserveGift(${item.id}, ${currentFriend.id}); closeModal();">🎁 Хочу подарить</button>` 
+                        : `<button class="modal-btn" style="background:#666" disabled>✅ Зарезервировано</button>`
+                    }
                     <button class="modal-btn" onclick="copyToMe(${item.id}); closeModal();">📋 Добавить к себе</button>
                     ${item.link ? `<button class="modal-btn" onclick="window.open('${item.link}', '_blank')">🛒 Где купить</button>` : ''}
                 `;
@@ -809,10 +628,7 @@
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
         
         function switchTab(tab) {
-            if (currentFriend) {
-                backToFriendsList();
-                return;
-            }
+            if (currentFriend) { backToFriendsList(); return; }
             document.querySelectorAll('.tab').forEach((t, i) => {
                 t.classList.toggle('active', (tab === 'my' && i === 0) || (tab === 'friends' && i === 1));
             });
