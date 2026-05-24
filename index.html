@@ -12,7 +12,6 @@
     :root {
       --orange: #FF6B00;
       --orange-light: #FFF0E5;
-      --green: #34C759;
       --red: #FF3B30;
       --red-light: #FFE5E5;
       --text-dark: #1A1A1A;
@@ -975,14 +974,21 @@
       currentFriendWishlist = [];
 
       document.querySelector('.header').innerHTML = `
-        <h1>🎁 Мой вишлист</h1>
-        <p>Подарки, которые я хочу получить</p>
+        <h1>👥 Вишлисты друзей</h1>
+        <p>Выберите друга и посмотрите его подарки</p>
       `;
 
       renderFriendsList();
     }
 
     function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((el, index) => {
+        el.classList.toggle('active', tab === 'my' ? index === 0 : index === 1);
+      });
+
+      document.getElementById('mySection').style.display = tab === 'my' ? 'block' : 'none';
+      document.getElementById('friendsSection').style.display = tab === 'friends' ? 'block' : 'none';
+
       if (tab === 'my') {
         currentFriend = null;
         currentFriendWishlist = [];
@@ -991,16 +997,15 @@
           <h1>🎁 Мой вишлист</h1>
           <p>Подарки, которые я хочу получить</p>
         `;
-      }
+      } else {
+        currentFriend = null;
+        currentFriendWishlist = [];
 
-      document.querySelectorAll('.tab').forEach((el, index) => {
-        el.classList.toggle('active', tab === 'my' ? index === 0 : index === 1);
-      });
+        document.querySelector('.header').innerHTML = `
+          <h1>👥 Вишлисты друзей</h1>
+          <p>Выберите друга и посмотрите его подарки</p>
+        `;
 
-      document.getElementById('mySection').style.display = tab === 'my' ? 'block' : 'none';
-      document.getElementById('friendsSection').style.display = tab === 'friends' ? 'block' : 'none';
-
-      if (tab === 'friends') {
         loadFriendsList();
       }
     }
