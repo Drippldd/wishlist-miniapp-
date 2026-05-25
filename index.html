@@ -872,29 +872,39 @@
     }
 
     async function reserveGift(giftId, friendId) {
+      const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve`;
+
       try {
-        const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve`;
+        alert('Пробую забронировать\nURL: ' + url + '\nuser_id: ' + userId);
 
         const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId })
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: Number(userId)
+          })
         });
 
         const text = await res.text();
 
+        alert(
+          'STATUS: ' + res.status +
+          '\nANSWER: ' + text
+        );
+
         if (!res.ok) {
-          alert(
-            'URL: ' + url +
-            '\nSTATUS: ' + res.status +
-            '\nANSWER: ' + text
-          );
           return;
         }
 
-        await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
+        await loadFriendWishlist(
+          currentFriend.id,
+          currentFriend.name,
+          currentFriend.username
+        );
       } catch (e) {
-        alert('Ошибка: ' + e.message);
+        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
     }
 
