@@ -444,19 +444,51 @@
     let selectedPhotoUrl = '';
     let isPhotoUploading = false;
 
-    if (!userId) {
-      alert('Ошибка: открой Mini App через Telegram-бота');
-    } else if (isDirectFriendMode) {
-      document.getElementById('mySection').style.display = 'none';
-      document.getElementById('friendsSection').style.display = 'block';
+    startApp();
 
-      document.querySelectorAll('.tab').forEach((el, index) => {
-        el.classList.toggle('active', index === 1);
-      });
+    async function apiFetch(url, options = {}, timeoutMs = 15000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-      loadFriendWishlist(Number(openedFriendId), 'Друг', '');
-    } else {
-      loadMyWishlist();
+      try {
+        const res = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+
+        clearTimeout(timer);
+        return res;
+      } catch (e) {
+        clearTimeout(timer);
+        throw e;
+      }
+    }
+
+    function showFatal(message) {
+      document.getElementById('myList').innerHTML = `<div class="empty">${escapeHtml(message)}</div>`;
+      document.getElementById('friendsList').innerHTML = `<div class="empty">${escapeHtml(message)}</div>`;
+    }
+
+    async function startApp() {
+      if (!userId) {
+        showFatal('Ошибка: открой Mini App через Telegram-бота');
+        alert('Ошибка: открой Mini App через Telegram-бота');
+        return;
+      }
+
+      if (isDirectFriendMode) {
+        document.getElementById('mySection').style.display = 'none';
+        document.getElementById('friendsSection').style.display = 'block';
+
+        document.querySelectorAll('.tab').forEach((el, index) => {
+          el.classList.toggle('active', index === 1);
+        });
+
+        await loadFriendWishlist(Number(openedFriendId), 'Друг', '');
+        return;
+      }
+
+      await loadMyWishlist();
       loadFriendsList();
     }
 
@@ -558,7 +590,7 @@
         const formData = new FormData();
         formData.append('file', compressedFile);
 
-        const res = await fetch(`${API_BASE}/upload_photo`, {
+        const res = await apiFetch(`${API_BASE}/upload_photo`, {
           method: 'POST',
           body: formData
         });
@@ -606,7 +638,7 @@
       };
 
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${userId}`, {
+        const res = await apiFetch(`${API_BASE}/wishlist/${userId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(giftData)
@@ -633,13 +665,13 @@
 
     async function loadMyWishlist() {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${userId}`);
+        const res = await apiFetch(`${API_BASE}/wishlist/${userId}`);
         const data = await res.json();
 
         myWishlist = Array.isArray(data) ? data.map(mapGift) : [];
         renderMyWishlist();
       } catch (e) {
-        document.getElementById('myList').innerHTML = '<div class="empty">Ошибка загрузки</div>';
+        document.getElementById('myList').innerHTML = `<div class="empty">Ошибка загрузки: ${escapeHtml(e.message)}</div>`;
       }
     }
 
@@ -708,7 +740,7 @@
       if (!confirm('Удалить подарок?')) return;
 
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${userId}/${giftId}`, {
+        const res = await apiFetch(`${API_BASE}/wishlist/${userId}/${giftId}`, {
           method: 'DELETE'
         });
 
@@ -723,7 +755,7 @@
 
     async function loadFriendsList() {
       try {
-        const res = await fetch(`${API_BASE}/friends/${userId}`);
+        const res = await apiFetch(`${API_BASE}/friends/${userId}`);
         const data = await res.json();
 
         friendsList = Array.isArray(data) ? data : [];
@@ -788,13 +820,13 @@
       container.innerHTML = '<div class="loading">Загрузка подарков...</div>';
 
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}`);
+        const res = await apiFetch(`${API_BASE}/wishlist/${friendId}`);
         const data = await res.json();
 
         currentFriendWishlist = Array.isArray(data) ? data.map(mapGift) : [];
         renderFriendWishlist();
       } catch (e) {
-        container.innerHTML = '<div class="empty">Ошибка загрузки вишлиста друга</div>';
+        container.innerHTML = `<div class="empty">Ошибка загрузки вишлиста друга: ${escapeHtml(e.message)}</div>`;
       }
     }
 
@@ -893,7 +925,12 @@
 
     async function reserveGift(giftId, friendId) {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
+        if (!userId) {
+          alert('Ошибка: не найден Telegram userId');
+          return;
+        }
+
+        const res = await apiFetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -904,8 +941,7 @@
         const text = await res.text();
 
         if (!res.ok) {
-          alert('STATUS: ' + res.status + '
-ANSWER: ' + text);
+          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
           return;
         }
 
@@ -917,22 +953,33 @@ ANSWER: ' + text);
           currentFriend.username
         );
       } catch (e) {
-        alert('FETCH ERROR: ' + e.name + '
-' + e.message);
+        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
     }
 
     async function unreserveGift(giftId, friendId) {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
+        if (!userId) {
+          alert('Ошибка: не найден Telegram userId');
+          return;
+        }
+
+        const res = await apiFetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
           method: 'DELETE'
         });
 
-        if (!res.ok) throw new Error('Ошибка снятия резерва');
+        const text = await res.text();
+
+        if (!res.ok) {
+          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
+          return;
+        }
+
+        tg.showAlert('❌ Резерв снят');
 
         await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
       } catch (e) {
-        alert('Ошибка: ' + e.message);
+        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
     }
 
@@ -950,7 +997,7 @@ ANSWER: ' + text);
       };
 
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${userId}`, {
+        const res = await apiFetch(`${API_BASE}/wishlist/${userId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(giftData)
