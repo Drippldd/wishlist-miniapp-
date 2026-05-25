@@ -872,35 +872,32 @@
     }
 
     async function reserveGift(giftId, friendId) {
-      const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve`;
-
       try {
-        alert('Пробую забронировать\nURL: ' + url);
-
-        const res = await fetch(url, {
+        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({})
+          body: JSON.stringify({
+            user_id: Number(userId)
+          })
         });
 
         const text = await res.text();
 
-        alert(
-          'STATUS: ' + res.status +
-          '\nANSWER: ' + text
-        );
-
         if (!res.ok) {
+          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
           return;
         }
+
+        tg.showAlert('🎁 Подарок забронирован');
 
         await loadFriendWishlist(
           currentFriend.id,
           currentFriend.name,
           currentFriend.username
         );
+
       } catch (e) {
         alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
