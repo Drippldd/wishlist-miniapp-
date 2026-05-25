@@ -435,6 +435,7 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const openedFriendId = urlParams.get('user_id');
+    const openedFriendName = decodeURIComponent(urlParams.get('name') || urlParams.get('first_name') || 'Друг');
     const isDirectFriendMode = Boolean(openedFriendId) && String(openedFriendId) !== String(userId);
 
     let myWishlist = [];
@@ -454,7 +455,7 @@
         el.classList.toggle('active', index === 1);
       });
 
-      loadFriendWishlist(Number(openedFriendId), 'Друг', '');
+      loadFriendWishlist(Number(openedFriendId), openedFriendName, '');
     } else {
       loadMyWishlist();
       loadFriendsList();
