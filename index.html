@@ -747,12 +747,13 @@
         const friendId = friend.user_id || friend.id;
         const name = friend.first_name || friend.name || 'Друг';
         const username = friend.username || '';
-        const photo = friend.photo_url || '';
+        const photo = friend.photo_url || friend.avatar_url || '';
+        const avatarId = `friendAvatar_${friendId}`;
 
         return `
           <div class="friend-card" onclick="loadFriendWishlist(${friendId}, '${escapeAttr(name)}', '${escapeAttr(username)}')">
-            <div class="friend-avatar">
-              ${photo ? `<img src="${escapeAttr(photo)}" onerror="this.parentElement.innerHTML='${escapeAttr(name[0] || '?')}'">` : escapeHtml(name[0] || '?')}
+            <div class="friend-avatar" id="${avatarId}" data-user-id="${friendId}" data-fallback="${escapeAttr(name[0] || '?')}">
+              ${photo ? `<img src="${escapeAttr(photo)}" onerror="loadTelegramAvatar(${friendId}, '${avatarId}')">` : escapeHtml(name[0] || '?')}
             </div>
 
             <div class="friend-info">
@@ -764,6 +765,39 @@
           </div>
         `;
       }).join('');
+
+      // После отрисовки подтягиваем реальные аватарки из Telegram через API
+      hydrateFriendAvatars();
+    }
+
+    async function loadTelegramAvatar(friendId, avatarElementId) {
+      const avatarEl = document.getElementById(avatarElementId);
+      if (!avatarEl) return;
+
+      const fallback = avatarEl.dataset.fallback || '?';
+
+      try {
+        const res = await fetch(`${API_BASE}/avatar/user/${friendId}?_=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('avatar status ' + res.status);
+
+        const data = await res.json();
+        if (!data || !data.exists || !data.url) {
+          avatarEl.innerHTML = escapeHtml(fallback);
+          return;
+        }
+
+        avatarEl.innerHTML = `<img src="${escapeAttr(data.url)}" alt="avatar" onerror="this.parentElement.innerHTML='${escapeAttr(fallback)}'">`;
+      } catch (e) {
+        avatarEl.innerHTML = escapeHtml(fallback);
+      }
+    }
+
+    function hydrateFriendAvatars() {
+      document.querySelectorAll('.friend-avatar[data-user-id]').forEach(el => {
+        const friendId = el.dataset.userId;
+        if (!friendId) return;
+        loadTelegramAvatar(friendId, el.id);
+      });
     }
 
     async function loadFriendWishlist(friendId, friendName, friendUsername) {
