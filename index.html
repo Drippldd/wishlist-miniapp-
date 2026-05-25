@@ -889,7 +889,7 @@
             '\nSTATUS: ' + res.status +
             '\nANSWER: ' + text
           );
-          throw new Error('Ошибка бронирования');
+          return;
         }
 
         await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
