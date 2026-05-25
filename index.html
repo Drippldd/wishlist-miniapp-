@@ -633,7 +633,7 @@
 
     async function loadMyWishlist() {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${userId}`);
+        const res = await fetch(`${API_BASE}/wishlist/${userId}?_=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
 
         myWishlist = Array.isArray(data) ? data.map(mapGift) : [];
@@ -788,7 +788,13 @@
       container.innerHTML = '<div class="loading">Загрузка подарков...</div>';
 
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}`);
+        const res = await fetch(`${API_BASE}/wishlist/${friendId}?_=${Date.now()}`, { cache: 'no-store' });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`GET wishlist ${res.status}: ${text}`);
+        }
+
         const data = await res.json();
 
         currentFriendWishlist = Array.isArray(data) ? data.map(mapGift) : [];
@@ -895,6 +901,7 @@
       try {
         const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
           method: 'POST',
+          cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: Number(userId)
@@ -922,15 +929,25 @@
 
     async function unreserveGift(giftId, friendId) {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
-          method: 'DELETE'
+        const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`;
+
+        const res = await fetch(url, {
+          method: 'DELETE',
+          cache: 'no-store'
         });
 
-        if (!res.ok) throw new Error('Ошибка снятия резерва');
+        const text = await res.text();
+
+        if (!res.ok) {
+          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
+          return;
+        }
+
+        tg.showAlert('❌ Резерв снят');
 
         await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
       } catch (e) {
-        alert('Ошибка: ' + e.message);
+        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
     }
 
