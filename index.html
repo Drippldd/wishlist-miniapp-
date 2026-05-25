@@ -873,26 +873,21 @@
 
     async function reserveGift(giftId, friendId) {
       try {
-        // Вариант 1: как у Саши для DELETE — через query user_id
-        let res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
+        const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`;
+
+        const res = await fetch(url, {
           method: 'POST'
         });
 
-        // Вариант 2: если бэк ждёт JSON body
-        if (!res.ok) {
-          res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              user_id: userId,
-              reserved_by: userId
-            })
-          });
-        }
+        const text = await res.text();
+
+        alert(
+          'URL: ' + url +
+          '\nSTATUS: ' + res.status +
+          '\nANSWER: ' + text
+        );
 
         if (!res.ok) {
-          const errorText = await res.text();
-          alert('Статус: ' + res.status + '\nОтвет сервера: ' + errorText);
           throw new Error('Ошибка бронирования');
         }
 
