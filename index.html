@@ -433,6 +433,11 @@
     const tgUser = tg.initDataUnsafe?.user;
     const userId = tgUser?.id;
 
+    // Если Mini App открыт по ссылке вида ?user_id=123, показываем вишлист этого пользователя
+    const urlParams = new URLSearchParams(window.location.search);
+    const openedFriendId = urlParams.get('user_id');
+    const isDirectFriendMode = Boolean(openedFriendId) && String(openedFriendId) !== String(userId);
+
     let myWishlist = [];
     let friendsList = [];
     let currentFriend = null;
@@ -442,6 +447,16 @@
 
     if (!userId) {
       alert('Ошибка: открой Mini App через Telegram-бота');
+    } else if (isDirectFriendMode) {
+      document.getElementById('mySection').style.display = 'none';
+      document.getElementById('friendsSection').style.display = 'block';
+
+      document.querySelectorAll('.tab').forEach((el, index) => {
+        el.classList.toggle('active', index === 1);
+      });
+
+      loadMyWishlist();
+      loadFriendWishlist(Number(openedFriendId), 'Друг', '');
     } else {
       loadMyWishlist();
       loadFriendsList();
@@ -759,9 +774,16 @@
         username: friendUsername
       };
 
+      document.getElementById('mySection').style.display = 'none';
+      document.getElementById('friendsSection').style.display = 'block';
+
+      document.querySelectorAll('.tab').forEach((el, index) => {
+        el.classList.toggle('active', index === 1);
+      });
+
       document.querySelector('.header').innerHTML = `
         <h1>🎁 Вишлист</h1>
-        <p>${escapeHtml(friendName)}</p>
+        <p>${escapeHtml(friendName || 'друга')}</p>
       `;
 
       const container = document.getElementById('friendsList');
@@ -783,14 +805,14 @@
 
       if (!currentFriendWishlist.length) {
         container.innerHTML = `
-          <button class="add-btn" onclick="backToFriends()">← Назад к друзьям</button>
+          <button class="add-btn" onclick="backToFriends()">${isDirectFriendMode ? '← Мои подарки' : '← Назад к друзьям'}</button>
           <div class="empty">🎁 У ${escapeHtml(currentFriend.name)} пока нет подарков</div>
         `;
         return;
       }
 
       container.innerHTML = `
-        <button class="add-btn" style="margin-bottom:16px;" onclick="backToFriends()">← Назад к друзьям</button>
+        <button class="add-btn" style="margin-bottom:16px;" onclick="backToFriends()">${isDirectFriendMode ? '← Мои подарки' : '← Назад к друзьям'}</button>
 
         ${currentFriendWishlist.map((item, index) => {
           const isReservedByMe = String(item.reserved_by) === String(userId);
@@ -875,9 +897,7 @@
       try {
         const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: Number(userId)
           })
@@ -886,7 +906,8 @@
         const text = await res.text();
 
         if (!res.ok) {
-          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
+          alert('STATUS: ' + res.status + '
+ANSWER: ' + text);
           return;
         }
 
@@ -897,23 +918,46 @@
           currentFriend.name,
           currentFriend.username
         );
-
       } catch (e) {
-        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
+        alert('FETCH ERROR: ' + e.name + '
+' + e.message);
       }
     }
 
     async function unreserveGift(giftId, friendId) {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
-          method: 'DELETE'
+        let res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: Number(userId)
+          })
         });
 
-        if (!res.ok) throw new Error('Ошибка снятия резерва');
+        if (!res.ok) {
+          // запасной вариант для старого бэка
+          res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
+            method: 'DELETE'
+          });
+        }
 
-        await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
+        if (!res.ok) {
+          const text = await res.text();
+          alert('STATUS: ' + res.status + '
+ANSWER: ' + text);
+          return;
+        }
+
+        tg.showAlert('❌ Резерв снят');
+
+        await loadFriendWishlist(
+          currentFriend.id,
+          currentFriend.name,
+          currentFriend.username
+        );
       } catch (e) {
-        alert('Ошибка: ' + e.message);
+        alert('FETCH ERROR: ' + e.name + '
+' + e.message);
       }
     }
 
@@ -949,6 +993,11 @@
     function backToFriends() {
       currentFriend = null;
       currentFriendWishlist = [];
+
+      if (isDirectFriendMode) {
+        switchTab('my');
+        return;
+      }
 
       document.querySelector('.header').innerHTML = `
         <h1>👥 Вишлисты друзей</h1>
