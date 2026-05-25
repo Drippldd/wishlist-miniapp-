@@ -873,21 +873,26 @@
 
     async function reserveGift(giftId, friendId) {
       try {
-        const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`;
+        const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve`;
 
         const res = await fetch(url, {
-          method: 'POST'
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: userId
+          })
         });
 
         const text = await res.text();
 
-        alert(
-          'URL: ' + url +
-          '\nSTATUS: ' + res.status +
-          '\nANSWER: ' + text
-        );
-
         if (!res.ok) {
+          alert(
+            'URL: ' + url +
+            '\nSTATUS: ' + res.status +
+            '\nANSWER: ' + text
+          );
           throw new Error('Ошибка бронирования');
         }
 
