@@ -875,16 +875,14 @@
       const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve`;
 
       try {
-        alert('Пробую забронировать\nURL: ' + url + '\nuser_id: ' + userId);
+        alert('Пробую забронировать\nURL: ' + url);
 
         const res = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            user_id: Number(userId)
-          })
+          body: JSON.stringify({})
         });
 
         const text = await res.text();
