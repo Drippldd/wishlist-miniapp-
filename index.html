@@ -433,7 +433,6 @@
     const tgUser = tg.initDataUnsafe?.user;
     const userId = tgUser?.id;
 
-    // Если Mini App открыт по ссылке вида ?user_id=123, показываем вишлист этого пользователя
     const urlParams = new URLSearchParams(window.location.search);
     const openedFriendId = urlParams.get('user_id');
     const isDirectFriendMode = Boolean(openedFriendId) && String(openedFriendId) !== String(userId);
@@ -455,7 +454,6 @@
         el.classList.toggle('active', index === 1);
       });
 
-      loadMyWishlist();
       loadFriendWishlist(Number(openedFriendId), 'Друг', '');
     } else {
       loadMyWishlist();
@@ -770,8 +768,8 @@
     async function loadFriendWishlist(friendId, friendName, friendUsername) {
       currentFriend = {
         id: friendId,
-        name: friendName,
-        username: friendUsername
+        name: friendName || 'Друг',
+        username: friendUsername || ''
       };
 
       document.getElementById('mySection').style.display = 'none';
@@ -783,7 +781,7 @@
 
       document.querySelector('.header').innerHTML = `
         <h1>🎁 Вишлист</h1>
-        <p>${escapeHtml(friendName || 'друга')}</p>
+        <p>${escapeHtml(currentFriend.name)}</p>
       `;
 
       const container = document.getElementById('friendsList');
@@ -926,38 +924,15 @@ ANSWER: ' + text);
 
     async function unreserveGift(giftId, friendId) {
       try {
-        let res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: Number(userId)
-          })
+        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
+          method: 'DELETE'
         });
 
-        if (!res.ok) {
-          // запасной вариант для старого бэка
-          res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
-            method: 'DELETE'
-          });
-        }
+        if (!res.ok) throw new Error('Ошибка снятия резерва');
 
-        if (!res.ok) {
-          const text = await res.text();
-          alert('STATUS: ' + res.status + '
-ANSWER: ' + text);
-          return;
-        }
-
-        tg.showAlert('❌ Резерв снят');
-
-        await loadFriendWishlist(
-          currentFriend.id,
-          currentFriend.name,
-          currentFriend.username
-        );
+        await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
       } catch (e) {
-        alert('FETCH ERROR: ' + e.name + '
-' + e.message);
+        alert('Ошибка: ' + e.message);
       }
     }
 
@@ -995,7 +970,19 @@ ANSWER: ' + text);
       currentFriendWishlist = [];
 
       if (isDirectFriendMode) {
-        switchTab('my');
+        document.getElementById('mySection').style.display = 'block';
+        document.getElementById('friendsSection').style.display = 'none';
+
+        document.querySelectorAll('.tab').forEach((el, index) => {
+          el.classList.toggle('active', index === 0);
+        });
+
+        document.querySelector('.header').innerHTML = `
+          <h1>🎁 Мой вишлист</h1>
+          <p>Подарки, которые я хочу получить</p>
+        `;
+
+        loadMyWishlist();
         return;
       }
 
