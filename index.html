@@ -873,14 +873,27 @@
 
     async function reserveGift(giftId, friendId) {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
+        // Вариант 1: как у Саши для DELETE — через query user_id
+        let res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
           method: 'POST'
         });
 
+        // Вариант 2: если бэк ждёт JSON body
+        if (!res.ok) {
+          res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: userId,
+              reserved_by: userId
+            })
+          });
+        }
+
         if (!res.ok) {
           const errorText = await res.text();
-          console.log('Ошибка бронирования:', errorText);
-          throw new Error(errorText || 'Ошибка бронирования');
+          alert('Статус: ' + res.status + '\nОтвет сервера: ' + errorText);
+          throw new Error('Ошибка бронирования');
         }
 
         await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
