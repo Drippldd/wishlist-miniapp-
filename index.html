@@ -873,13 +873,15 @@
 
     async function reserveGift(giftId, friendId) {
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reserved_by: userId })
+        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${userId}`, {
+          method: 'POST'
         });
 
-        if (!res.ok) throw new Error('Ошибка бронирования');
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.log('Ошибка бронирования:', errorText);
+          throw new Error(errorText || 'Ошибка бронирования');
+        }
 
         await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
       } catch (e) {
