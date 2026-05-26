@@ -374,6 +374,32 @@
       font-size: 24px;
       cursor: pointer;
     }
+
+
+    .bottom-toast {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      z-index: 10000;
+      background: var(--main-gradient);
+      color: #fff;
+      padding: 16px 18px;
+      border-radius: 22px;
+      box-shadow: 0 12px 28px rgba(138, 77, 255, 0.28);
+      font-size: 15px;
+      font-weight: 800;
+      text-align: center;
+      transform: translateY(140%);
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .bottom-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 
@@ -415,6 +441,10 @@
     </div>
   </div>
 
+
+
+  <div id="bottomToast" class="bottom-toast">Упс, сейчас обновим страницу</div>
+
   <div id="modal" class="modal" onclick="if(event.target === this) closeModal()">
     <button class="close-modal" onclick="closeModal()">×</button>
     <div class="modal-content">
@@ -450,6 +480,22 @@
     let selectedPhotoUrl = '';
     let isPhotoUploading = false;
     const reservePending = new Set();
+    let reloadToastTimer = null;
+
+    function showBottomToast(message = 'Упс, сейчас обновим страницу') {
+      const toast = document.getElementById('bottomToast');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add('show');
+    }
+
+    function showReloadToastAndReload(message = 'Упс, сейчас обновим страницу') {
+      showBottomToast(message);
+      if (reloadToastTimer) clearTimeout(reloadToastTimer);
+      reloadToastTimer = setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    }
 
     if (!userId) {
       alert('Ошибка: открой Mini App через Telegram-бота');
@@ -994,20 +1040,20 @@
           // Не показываем страшный alert, если сервер сказал, что уже занято.
           // Просто тихо обновляем список с сервера.
           if (res.status === 400 && detail.includes('already reserved')) {
-            await refreshFriendWishlistAfterAction(450);
+            showReloadToastAndReload('Упс, сейчас обновим страницу');
             return;
           }
 
           setGiftReserveLocal(giftId, oldReservedBy ?? null);
-          tg.showAlert('Не получилось забронировать. Попробуй ещё раз.');
+          showReloadToastAndReload('Упс, сейчас обновим страницу');
           return;
         }
 
-        tg.showAlert('🎁 Подарок забронирован');
+        showBottomToast('🎁 Подарок забронирован');
         await refreshFriendWishlistAfterAction(350);
       } catch (e) {
         setGiftReserveLocal(giftId, oldReservedBy ?? null);
-        tg.showAlert('Ошибка сети. Попробуй ещё раз.');
+        showReloadToastAndReload('Упс, сейчас обновим страницу');
       } finally {
         reservePending.delete(pendingKey);
         renderFriendWishlist();
@@ -1047,7 +1093,7 @@
 
         if (!res.ok) {
           setGiftReserveLocal(giftId, oldReservedBy ?? Number(userId));
-          tg.showAlert('Не получилось снять резерв. Попробуй ещё раз.');
+          showReloadToastAndReload('Упс, сейчас обновим страницу');
           return;
         }
 
@@ -1055,7 +1101,7 @@
         await refreshFriendWishlistAfterAction(450);
       } catch (e) {
         setGiftReserveLocal(giftId, oldReservedBy ?? Number(userId));
-        tg.showAlert('Ошибка сети. Попробуй ещё раз.');
+        showReloadToastAndReload('Упс, сейчас обновим страницу');
       } finally {
         reservePending.delete(pendingKey);
         renderFriendWishlist();
