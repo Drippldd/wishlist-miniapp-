@@ -436,6 +436,37 @@
       font-size: 24px;
       cursor: pointer;
     }
+
+
+    .bottom-toast {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 15px 18px;
+      border-radius: 24px;
+      background: var(--gradient);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(217,79,138,.35);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform .25s ease, opacity .25s ease;
+    }
+
+    .bottom-toast.show {
+      display: flex;
+      transform: translateY(0);
+      opacity: 1;
+    }
+
   </style>
 </head>
 
@@ -504,6 +535,8 @@
     </div>
   </div>
 
+  <div id="bottomToast" class="bottom-toast">Упс, сейчас обновим страницу</div>
+
   <div id="modal" class="modal" onclick="if(event.target === this) closeModal()">
     <button class="close-modal" onclick="closeModal()">×</button>
     <div class="modal-content">
@@ -555,8 +588,95 @@
 
       loadFriendWishlist(Number(openedFriendId), openedFriendName, '');
     } else {
-      loadMyWishlist();
-      loadFriendsList();
+      const savedNavState = getSavedNavigationState();
+
+      if (savedNavState && savedNavState.mode === 'friend' && savedNavState.friendId) {
+        loadMyWishlist();
+        loadFriendsList();
+        loadFriendWishlist(Number(savedNavState.friendId), savedNavState.friendName || 'Друг', savedNavState.friendUsername || '');
+        restoreScrollLater(savedNavState.scrollY || 0);
+      } else if (savedNavState && savedNavState.mode === 'planned') {
+        loadMyWishlist();
+        loadFriendsList();
+        switchTab('planned');
+        restoreScrollLater(savedNavState.scrollY || 0);
+      } else {
+        loadMyWishlist();
+        loadFriendsList();
+      }
+    }
+
+    function getSavedNavigationState() {
+      try {
+        const raw = sessionStorage.getItem('wishlist_nav_state');
+        if (!raw) return null;
+        sessionStorage.removeItem('wishlist_nav_state');
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveCurrentNavigationState() {
+      try {
+        const isPlannedOpen = document.getElementById('plannedSection')?.style.display === 'block';
+        const isFriendOpen = currentFriend && document.getElementById('friendsSection')?.style.display === 'block';
+
+        const state = {
+          mode: isPlannedOpen ? 'planned' : isFriendOpen ? 'friend' : 'my',
+          friendId: currentFriend?.id || null,
+          friendName: currentFriend?.name || '',
+          friendUsername: currentFriend?.username || '',
+          scrollY: window.scrollY || 0
+        };
+
+        sessionStorage.setItem('wishlist_nav_state', JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function restoreScrollLater(scrollY) {
+      setTimeout(() => window.scrollTo(0, Number(scrollY) || 0), 450);
+      setTimeout(() => window.scrollTo(0, Number(scrollY) || 0), 900);
+    }
+
+    function showBottomToast(message = 'Упс, сейчас обновим страницу') {
+      const toast = document.getElementById('bottomToast');
+      if (!toast) return;
+
+      toast.textContent = message;
+      toast.classList.add('show');
+    }
+
+    function showBottomToastAndReload(message = 'Упс, сейчас обновим страницу') {
+      saveCurrentNavigationState();
+      showBottomToast(message);
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    }
+
+    function setGiftReserveLocally(giftId, ownerId, reservedByValue) {
+      const patchGift = gift => {
+        if (String(gift.id) === String(giftId)) {
+          gift.reserved_by = reservedByValue;
+          gift.is_reserved = reservedByValue !== null && reservedByValue !== undefined;
+        }
+      };
+
+      currentFriendWishlist.forEach(patchGift);
+      plannedGifts.forEach(patchGift);
+
+      if (currentFriend && String(currentFriend.id) === String(ownerId)) {
+        renderFriendWishlist();
+      }
+
+      if (document.getElementById('plannedSection')?.style.display === 'block') {
+        if (reservedByValue === null || reservedByValue === undefined) {
+          plannedGifts = plannedGifts.filter(item => !(String(item.id) === String(giftId) && String(item.owner_id) === String(ownerId)));
+        }
+        renderPlannedGifts();
+      }
     }
 
     function setAddButtonState() {
@@ -1106,7 +1226,12 @@
     }
 
     async function reserveGift(giftId, friendId) {
+      const previousGift = currentFriendWishlist.find(g => String(g.id) === String(giftId));
+      const previousReservedBy = previousGift ? previousGift.reserved_by : null;
+
       try {
+        setGiftReserveLocally(giftId, friendId, Number(userId));
+
         const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
           method: 'POST',
           cache: 'no-store',
@@ -1116,30 +1241,29 @@
           })
         });
 
-        const text = await res.text();
-
         if (!res.ok) {
-          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
+          setGiftReserveLocally(giftId, friendId, previousReservedBy);
+          showBottomToastAndReload('Упс, сейчас обновим страницу');
           return;
         }
 
-        tg.showAlert('🎁 Подарок забронирован');
-
-        await loadFriendWishlist(
-          currentFriend.id,
-          currentFriend.name,
-          currentFriend.username
-        );
+        await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
         if (document.getElementById('plannedSection')?.style.display === 'block') {
           await loadPlannedGifts();
         }
       } catch (e) {
-        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
+        setGiftReserveLocally(giftId, friendId, previousReservedBy);
+        showBottomToastAndReload('Упс, сейчас обновим страницу');
       }
     }
 
     async function unreserveGift(giftId, friendId) {
+      const previousGift = currentFriendWishlist.find(g => String(g.id) === String(giftId));
+      const previousReservedBy = previousGift ? previousGift.reserved_by : Number(userId);
+
       try {
+        setGiftReserveLocally(giftId, friendId, null);
+
         const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`;
 
         const res = await fetch(url, {
@@ -1147,21 +1271,19 @@
           cache: 'no-store'
         });
 
-        const text = await res.text();
-
         if (!res.ok) {
-          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
+          setGiftReserveLocally(giftId, friendId, previousReservedBy);
+          showBottomToastAndReload('Упс, сейчас обновим страницу');
           return;
         }
-
-        tg.showAlert('❌ Резерв снят');
 
         await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
         if (document.getElementById('plannedSection')?.style.display === 'block') {
           await loadPlannedGifts();
         }
       } catch (e) {
-        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
+        setGiftReserveLocally(giftId, friendId, previousReservedBy);
+        showBottomToastAndReload('Упс, сейчас обновим страницу');
       }
     }
 
@@ -1285,7 +1407,7 @@
         });
 
         if (!res.ok) {
-          tg.showAlert('Не получилось удалить резерв');
+          showBottomToastAndReload('Упс, сейчас обновим страницу');
           return;
         }
 
@@ -1298,7 +1420,7 @@
 
         tg.showAlert('Резерв удалён');
       } catch (e) {
-        tg.showAlert('Ошибка удаления резерва');
+        showBottomToastAndReload('Упс, сейчас обновим страницу');
       }
     }
 
