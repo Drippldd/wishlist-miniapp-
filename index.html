@@ -201,6 +201,19 @@
       margin-bottom: 8px;
     }
 
+
+    .planned-owner {
+      font-size: 12px;
+      color: var(--text-gray);
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .planned-owner strong {
+      color: #E05AAE;
+      font-weight: 800;
+    }
+
     .gift-actions {
       display: flex;
       gap: 8px;
@@ -422,6 +435,7 @@
   <div class="tabs">
     <div class="tab active" onclick="switchTab('my')">Мои подарки</div>
     <div class="tab" onclick="switchTab('friends')">Друзья</div>
+    <div class="tab" onclick="switchTab('planned')">Что подарить</div>
   </div>
 
   <div id="mySection">
@@ -471,6 +485,12 @@
     </div>
   </div>
 
+  <div id="plannedSection" style="display:none;">
+    <div id="plannedList">
+      <div class="loading">Загрузка...</div>
+    </div>
+  </div>
+
   <div id="modal" class="modal" onclick="if(event.target === this) closeModal()">
     <button class="close-modal" onclick="closeModal()">×</button>
     <div class="modal-content">
@@ -503,6 +523,7 @@
     let friendsList = [];
     let currentFriend = null;
     let currentFriendWishlist = [];
+    let plannedGifts = [];
     let mySearchQuery = '';
     let friendSearchQuery = '';
     let selectedPhotoUrl = '';
@@ -513,6 +534,7 @@
     } else if (isDirectFriendMode) {
       document.getElementById('mySection').style.display = 'none';
       document.getElementById('friendsSection').style.display = 'block';
+      document.getElementById('plannedSection').style.display = 'none';
 
       document.querySelectorAll('.tab').forEach((el, index) => {
         el.classList.toggle('active', index === 1);
@@ -929,6 +951,7 @@
 
       document.getElementById('mySection').style.display = 'none';
       document.getElementById('friendsSection').style.display = 'block';
+      document.getElementById('plannedSection').style.display = 'none';
 
       document.querySelectorAll('.tab').forEach((el, index) => {
         el.classList.toggle('active', index === 1);
@@ -1094,6 +1117,9 @@
           currentFriend.name,
           currentFriend.username
         );
+        if (document.getElementById('plannedSection')?.style.display === 'block') {
+          await loadPlannedGifts();
+        }
       } catch (e) {
         alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
@@ -1118,8 +1144,148 @@
         tg.showAlert('❌ Резерв снят');
 
         await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
+        if (document.getElementById('plannedSection')?.style.display === 'block') {
+          await loadPlannedGifts();
+        }
       } catch (e) {
         alert('FETCH ERROR: ' + e.name + '\n' + e.message);
+      }
+    }
+
+
+    async function loadPlannedGifts() {
+      const container = document.getElementById('plannedList');
+      if (!container) return;
+
+      container.innerHTML = '<div class="loading">Загрузка того, что ты хотел подарить...</div>';
+      plannedGifts = [];
+
+      try {
+        let friends = friendsList;
+
+        if (!friends.length) {
+          const friendsRes = await fetch(`${API_BASE}/friends/${userId}?_=${Date.now()}`, { cache: 'no-store' });
+          const friendsData = await friendsRes.json();
+          friends = Array.isArray(friendsData) ? friendsData : [];
+          friendsList = friends;
+        }
+
+        if (!friends.length) {
+          renderPlannedGifts();
+          return;
+        }
+
+        const results = await Promise.allSettled(
+          friends.map(async friend => {
+            const ownerId = friend.user_id || friend.id;
+            const ownerName = friend.first_name || friend.name || 'Друг';
+            const ownerUsername = friend.username || '';
+
+            const res = await fetch(`${API_BASE}/wishlist/${ownerId}?_=${Date.now()}`, { cache: 'no-store' });
+            if (!res.ok) return [];
+
+            const data = await res.json();
+            const gifts = Array.isArray(data) ? data.map(mapGift) : [];
+
+            return gifts
+              .filter(gift => String(gift.reserved_by) === String(userId))
+              .map(gift => ({
+                ...gift,
+                owner_id: ownerId,
+                owner_name: ownerName,
+                owner_username: ownerUsername
+              }));
+          })
+        );
+
+        plannedGifts = results
+          .filter(result => result.status === 'fulfilled')
+          .flatMap(result => result.value);
+
+        renderPlannedGifts();
+      } catch (e) {
+        container.innerHTML = '<div class="empty">Не получилось загрузить список</div>';
+      }
+    }
+
+    function renderPlannedGifts() {
+      const container = document.getElementById('plannedList');
+      if (!container) return;
+
+      if (!plannedGifts.length) {
+        container.innerHTML = `
+          <div class="empty">
+            🎁 Пока нет забронированных подарков<br><br>
+            Когда ты забронируешь подарок у друга, он появится здесь.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = plannedGifts.map((item, index) => `
+        <div class="gift-card">
+          <div class="gift-card-content" onclick="openPlannedModal(${index})">
+            <div class="gift-image">
+              ${renderGiftImage(item, 'Ты даришь')}
+            </div>
+
+            <div class="gift-details">
+              <div class="planned-owner">это ты хотел подарить <strong>${escapeHtml(item.owner_name)}</strong></div>
+              <div class="gift-title">${escapeHtml(item.name)}</div>
+              <div class="gift-price">${escapeHtml(item.price)} ₽</div>
+
+              ${item.description ? `<div class="gift-desc">${escapeHtml(item.description)}</div>` : ''}
+
+              <div class="gift-actions">
+                <button class="delete-btn" onclick="event.stopPropagation(); removePlannedGift(${item.id}, ${item.owner_id})">🗑 Удалить</button>
+                ${item.link ? `<button class="link-btn" onclick="event.stopPropagation(); openLink('${escapeAttr(item.link)}')">🛒 Перейти</button>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openPlannedModal(index) {
+      const item = plannedGifts[index];
+      if (!item) return;
+
+      document.getElementById('modalTitle').innerText = item.name;
+      document.getElementById('modalPrice').innerText = `${item.price} ₽`;
+      document.getElementById('modalDesc').innerText = `Это ты хотел подарить ${item.owner_name}${item.description ? '\n\n' + item.description : ''}`;
+      document.getElementById('modalImage').innerHTML = renderGiftImage(item, 'Ты даришь');
+
+      document.getElementById('modalButtons').innerHTML = `
+        <button class="modal-btn" style="background:#FF3B30" onclick="removePlannedGift(${item.id}, ${item.owner_id}); closeModal();">🗑 Удалить</button>
+        ${item.link ? `<button class="modal-btn" onclick="openLink('${escapeAttr(item.link)}')">🛒 Перейти</button>` : ''}
+      `;
+
+      document.getElementById('modal').style.display = 'block';
+    }
+
+    async function removePlannedGift(giftId, ownerId) {
+      try {
+        const url = `${API_BASE}/wishlist/${ownerId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`;
+        const res = await fetch(url, {
+          method: 'DELETE',
+          cache: 'no-store'
+        });
+
+        if (!res.ok) {
+          tg.showAlert('Не получилось удалить резерв');
+          return;
+        }
+
+        plannedGifts = plannedGifts.filter(item => !(String(item.id) === String(giftId) && String(item.owner_id) === String(ownerId)));
+        renderPlannedGifts();
+
+        if (currentFriend && String(currentFriend.id) === String(ownerId)) {
+          await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
+        }
+
+        tg.showAlert('Резерв удалён');
+      } catch (e) {
+        tg.showAlert('Ошибка удаления резерва');
       }
     }
 
@@ -1162,6 +1328,7 @@
       if (isDirectFriendMode) {
         document.getElementById('mySection').style.display = 'block';
         document.getElementById('friendsSection').style.display = 'none';
+        document.getElementById('plannedSection').style.display = 'none';
 
         document.querySelectorAll('.tab').forEach((el, index) => {
           el.classList.toggle('active', index === 0);
@@ -1176,6 +1343,11 @@
         return;
       }
 
+      document.getElementById('mySection').style.display = 'none';
+      document.getElementById('friendsSection').style.display = 'block';
+      document.getElementById('plannedSection').style.display = 'none';
+      document.getElementById('plannedSection').style.display = 'none';
+
       document.querySelector('.header').innerHTML = `
         <h1>👥 Вишлисты друзей</h1>
         <p>Выберите друга и посмотрите его подарки</p>
@@ -1186,11 +1358,16 @@
 
     function switchTab(tab) {
       document.querySelectorAll('.tab').forEach((el, index) => {
-        el.classList.toggle('active', tab === 'my' ? index === 0 : index === 1);
+        const activeIndex = tab === 'my' ? 0 : tab === 'friends' ? 1 : 2;
+        el.classList.toggle('active', index === activeIndex);
       });
 
       document.getElementById('mySection').style.display = tab === 'my' ? 'block' : 'none';
       document.getElementById('friendsSection').style.display = tab === 'friends' ? 'block' : 'none';
+      document.getElementById('plannedSection').style.display = tab === 'planned' ? 'block' : 'none';
+
+      const friendSearchWrap = document.getElementById('friendSearchWrap');
+      if (tab !== 'friends' && friendSearchWrap) friendSearchWrap.style.display = 'none';
 
       if (tab === 'my') {
         currentFriend = null;
@@ -1200,7 +1377,7 @@
           <h1>🎁 Мой вишлист</h1>
           <p>Подарки, которые я хочу получить</p>
         `;
-      } else {
+      } else if (tab === 'friends') {
         currentFriend = null;
         currentFriendWishlist = [];
 
@@ -1210,6 +1387,16 @@
         `;
 
         loadFriendsList();
+      } else {
+        currentFriend = null;
+        currentFriendWishlist = [];
+
+        document.querySelector('.header').innerHTML = `
+          <h1>🎁 Что я хочу подарить</h1>
+          <p>Твои забронированные подарки для друзей</p>
+        `;
+
+        loadPlannedGifts();
       }
     }
 
