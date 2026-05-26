@@ -481,6 +481,37 @@
     let isPhotoUploading = false;
     const reservePending = new Set();
     let reloadToastTimer = null;
+    const VIEW_STATE_KEY = 'wishlistMiniAppCurrentView';
+
+    function saveCurrentViewBeforeReload() {
+      try {
+        if (currentFriend && currentFriend.id) {
+          sessionStorage.setItem(VIEW_STATE_KEY, JSON.stringify({
+            mode: 'friend',
+            id: currentFriend.id,
+            name: currentFriend.name || 'Друг',
+            username: currentFriend.username || ''
+          }));
+          return;
+        }
+
+        const friendsVisible = document.getElementById('friendsSection')?.style.display !== 'none';
+        sessionStorage.setItem(VIEW_STATE_KEY, JSON.stringify({
+          mode: friendsVisible ? 'friends' : 'my'
+        }));
+      } catch (_) {}
+    }
+
+    function readSavedViewAfterReload() {
+      try {
+        const raw = sessionStorage.getItem(VIEW_STATE_KEY);
+        if (!raw) return null;
+        sessionStorage.removeItem(VIEW_STATE_KEY);
+        return JSON.parse(raw);
+      } catch (_) {
+        return null;
+      }
+    }
 
     function showBottomToast(message = 'Упс, сейчас обновим страницу') {
       const toast = document.getElementById('bottomToast');
@@ -491,14 +522,31 @@
 
     function showReloadToastAndReload(message = 'Упс, сейчас обновим страницу') {
       showBottomToast(message);
+      saveCurrentViewBeforeReload();
       if (reloadToastTimer) clearTimeout(reloadToastTimer);
       reloadToastTimer = setTimeout(() => {
         window.location.reload();
       }, 900);
     }
 
+    const savedView = readSavedViewAfterReload();
+
     if (!userId) {
       alert('Ошибка: открой Mini App через Telegram-бота');
+    } else if (savedView && savedView.mode === 'friend' && savedView.id) {
+      document.getElementById('mySection').style.display = 'none';
+      document.getElementById('friendsSection').style.display = 'block';
+
+      document.querySelectorAll('.tab').forEach((el, index) => {
+        el.classList.toggle('active', index === 1);
+      });
+
+      loadMyWishlist();
+      loadFriendsList();
+      loadFriendWishlist(Number(savedView.id), savedView.name || 'Друг', savedView.username || '');
+    } else if (savedView && savedView.mode === 'friends') {
+      switchTab('friends');
+      loadMyWishlist();
     } else if (isDirectFriendMode) {
       document.getElementById('mySection').style.display = 'none';
       document.getElementById('friendsSection').style.display = 'block';
