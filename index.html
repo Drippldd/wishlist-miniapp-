@@ -456,6 +456,16 @@
   </div>
 
   <div id="friendsSection" style="display:none;">
+    <div class="search-wrap" id="friendSearchWrap" style="display:none;">
+      <input
+        class="wishlist-search"
+        id="friendSearchInput"
+        type="text"
+        placeholder="🔎 Найти подарок"
+        oninput="onFriendSearchInput(this.value)"
+      >
+    </div>
+
     <div id="friendsList">
       <div class="loading">Загрузка друзей...</div>
     </div>
@@ -841,6 +851,8 @@
 
     function renderFriendsList() {
       const container = document.getElementById('friendsList');
+      const friendSearchWrap = document.getElementById('friendSearchWrap');
+      if (friendSearchWrap) friendSearchWrap.style.display = 'none';
 
       if (!friendsList.length) {
         container.innerHTML = '<div class="empty">👋 Пока нет друзей</div>';
@@ -949,21 +961,19 @@
 
     function renderFriendWishlist() {
       const container = document.getElementById('friendsList');
+      const searchWrap = document.getElementById('friendSearchWrap');
+      const searchInput = document.getElementById('friendSearchInput');
       const backButtonText = isDirectFriendMode ? '← Мои подарки' : '← Назад к друзьям';
-      const searchBlock = `
-        <div class="search-wrap">
-          <input
-            class="wishlist-search"
-            id="friendSearchInput"
-            type="text"
-            value="${escapeAttr(friendSearchQuery)}"
-            placeholder="🔎 Найти подарок у ${escapeAttr(currentFriend?.name || 'друга')}"
-            oninput="onFriendSearchInput(this.value)"
-          >
-        </div>
-      `;
+
+      if (searchInput) {
+        searchInput.placeholder = `🔎 Найти подарок у ${currentFriend?.name || 'друга'}`;
+        if (document.activeElement !== searchInput) {
+          searchInput.value = friendSearchQuery;
+        }
+      }
 
       if (!currentFriendWishlist.length) {
+        if (searchWrap) searchWrap.style.display = 'none';
         container.innerHTML = `
           <button class="add-btn" onclick="backToFriends()">${backButtonText}</button>
           <div class="empty">🎁 У ${escapeHtml(currentFriend.name)} пока нет подарков</div>
@@ -971,13 +981,14 @@
         return;
       }
 
+      if (searchWrap) searchWrap.style.display = 'block';
+
       const filteredWishlist = currentFriendWishlist
         .map((item, originalIndex) => ({ item, originalIndex }))
         .filter(({ item }) => giftMatchesSearch(item, friendSearchQuery));
 
       container.innerHTML = `
         <button class="add-btn" style="margin-bottom:16px;" onclick="backToFriends()">${backButtonText}</button>
-        ${searchBlock}
 
         ${!filteredWishlist.length ? '<div class="search-empty">🔎 Ничего не найдено</div>' : filteredWishlist.map(({ item, originalIndex }) => {
           const isReservedByMe = String(item.reserved_by) === String(userId);
@@ -1144,6 +1155,9 @@
     function backToFriends() {
       currentFriend = null;
       currentFriendWishlist = [];
+      friendSearchQuery = '';
+      const friendSearchWrap = document.getElementById('friendSearchWrap');
+      if (friendSearchWrap) friendSearchWrap.style.display = 'none';
 
       if (isDirectFriendMode) {
         document.getElementById('mySection').style.display = 'block';
