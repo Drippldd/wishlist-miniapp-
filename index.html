@@ -10,7 +10,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      /* Палитра под логотип: коралловый → розовый → фиолетовый */
       --orange: #FF5A5F;
       --orange2: #8A4DFF;
       --orange-light: #FFF2F5;
@@ -59,7 +58,6 @@
     .tab.active {
       background: var(--main-gradient);
       color: white;
-      box-shadow: 0 4px 14px rgba(224, 90, 174, 0.28);
     }
 
     .add-form {
@@ -378,28 +376,31 @@
 
     .bottom-toast {
       position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: calc(14px + env(safe-area-inset-bottom));
+      left: 16px;
+      right: 16px;
+      bottom: calc(18px + env(safe-area-inset-bottom));
       z-index: 10000;
-      background: var(--main-gradient);
-      color: #fff;
-      padding: 16px 18px;
+      display: none;
+      padding: 15px 18px;
       border-radius: 22px;
-      box-shadow: 0 12px 28px rgba(138, 77, 255, 0.28);
-      font-size: 15px;
+      color: white;
+      background: var(--main-gradient);
+      box-shadow: 0 14px 35px rgba(138, 77, 255, 0.25);
       font-weight: 800;
       text-align: center;
-      transform: translateY(140%);
+      font-size: 15px;
+      line-height: 1.35;
+      transform: translateY(120%);
       opacity: 0;
-      transition: transform 0.25s ease, opacity 0.25s ease;
-      pointer-events: none;
+      transition: transform .25s ease, opacity .25s ease;
     }
 
     .bottom-toast.show {
+      display: block;
       transform: translateY(0);
       opacity: 1;
     }
+
   </style>
 </head>
 
@@ -441,8 +442,6 @@
     </div>
   </div>
 
-
-
   <div id="bottomToast" class="bottom-toast">Упс, сейчас обновим страницу</div>
 
   <div id="modal" class="modal" onclick="if(event.target === this) closeModal()">
@@ -472,6 +471,7 @@
     const openedFriendId = urlParams.get('user_id');
     const openedFriendName = decodeURIComponent(urlParams.get('name') || urlParams.get('first_name') || 'Друг');
     const isDirectFriendMode = Boolean(openedFriendId) && String(openedFriendId) !== String(userId);
+    const STATE_KEY = 'wishlistMiniAppCurrentPlace';
 
     let myWishlist = [];
     let friendsList = [];
@@ -479,75 +479,31 @@
     let currentFriendWishlist = [];
     let selectedPhotoUrl = '';
     let isPhotoUploading = false;
-    const reservePending = new Set();
-    let reloadToastTimer = null;
-    const VIEW_STATE_KEY = 'wishlistMiniAppCurrentView';
+    let pendingScrollY = 0;
 
-    function saveCurrentViewBeforeReload() {
+    function getSavedPlace() {
       try {
-        if (currentFriend && currentFriend.id) {
-          sessionStorage.setItem(VIEW_STATE_KEY, JSON.stringify({
-            mode: 'friend',
-            id: currentFriend.id,
-            name: currentFriend.name || 'Друг',
-            username: currentFriend.username || ''
-          }));
-          return;
-        }
-
-        const friendsVisible = document.getElementById('friendsSection')?.style.display !== 'none';
-        sessionStorage.setItem(VIEW_STATE_KEY, JSON.stringify({
-          mode: friendsVisible ? 'friends' : 'my'
-        }));
-      } catch (_) {}
-    }
-
-    function readSavedViewAfterReload() {
-      try {
-        const raw = sessionStorage.getItem(VIEW_STATE_KEY);
+        const raw = localStorage.getItem(STATE_KEY);
         if (!raw) return null;
-        sessionStorage.removeItem(VIEW_STATE_KEY);
-        return JSON.parse(raw);
-      } catch (_) {
+        const data = JSON.parse(raw);
+        if (!data || Date.now() - Number(data.ts || 0) > 120000) {
+          localStorage.removeItem(STATE_KEY);
+          return null;
+        }
+        localStorage.removeItem(STATE_KEY);
+        return data;
+      } catch (e) {
+        localStorage.removeItem(STATE_KEY);
         return null;
       }
     }
 
-    function showBottomToast(message = 'Упс, сейчас обновим страницу') {
-      const toast = document.getElementById('bottomToast');
-      if (!toast) return;
-      toast.textContent = message;
-      toast.classList.add('show');
-    }
-
-    function showReloadToastAndReload(message = 'Упс, сейчас обновим страницу') {
-      showBottomToast(message);
-      saveCurrentViewBeforeReload();
-      if (reloadToastTimer) clearTimeout(reloadToastTimer);
-      reloadToastTimer = setTimeout(() => {
-        window.location.reload();
-      }, 900);
-    }
-
-    const savedView = readSavedViewAfterReload();
+    const savedPlace = getSavedPlace();
 
     if (!userId) {
       alert('Ошибка: открой Mini App через Telegram-бота');
-    } else if (savedView && savedView.mode === 'friend' && savedView.id) {
-      document.getElementById('mySection').style.display = 'none';
-      document.getElementById('friendsSection').style.display = 'block';
-
-      document.querySelectorAll('.tab').forEach((el, index) => {
-        el.classList.toggle('active', index === 1);
-      });
-
-      loadMyWishlist();
-      loadFriendsList();
-      loadFriendWishlist(Number(savedView.id), savedView.name || 'Друг', savedView.username || '');
-    } else if (savedView && savedView.mode === 'friends') {
-      switchTab('friends');
-      loadMyWishlist();
     } else if (isDirectFriendMode) {
+      pendingScrollY = Number(savedPlace?.scrollY || 0);
       document.getElementById('mySection').style.display = 'none';
       document.getElementById('friendsSection').style.display = 'block';
 
@@ -556,9 +512,65 @@
       });
 
       loadFriendWishlist(Number(openedFriendId), openedFriendName, '');
+    } else if (savedPlace && savedPlace.mode === 'friend' && savedPlace.friendId) {
+      pendingScrollY = Number(savedPlace.scrollY || 0);
+      document.getElementById('mySection').style.display = 'none';
+      document.getElementById('friendsSection').style.display = 'block';
+
+      document.querySelectorAll('.tab').forEach((el, index) => {
+        el.classList.toggle('active', index === 1);
+      });
+
+      loadFriendWishlist(Number(savedPlace.friendId), savedPlace.friendName || 'Друг', savedPlace.friendUsername || '');
     } else {
       loadMyWishlist();
       loadFriendsList();
+    }
+
+
+    function saveCurrentPlace() {
+      if (currentFriend && currentFriend.id) {
+        localStorage.setItem(STATE_KEY, JSON.stringify({
+          mode: 'friend',
+          friendId: currentFriend.id,
+          friendName: currentFriend.name || 'Друг',
+          friendUsername: currentFriend.username || '',
+          scrollY: window.scrollY || document.documentElement.scrollTop || 0,
+          ts: Date.now()
+        }));
+      } else {
+        localStorage.setItem(STATE_KEY, JSON.stringify({
+          mode: 'my',
+          scrollY: window.scrollY || document.documentElement.scrollTop || 0,
+          ts: Date.now()
+        }));
+      }
+    }
+
+    function restoreScrollIfNeeded() {
+      if (!pendingScrollY) return;
+      const y = pendingScrollY;
+      pendingScrollY = 0;
+      setTimeout(() => window.scrollTo({ top: y, behavior: 'instant' }), 120);
+    }
+
+    function showBottomToastAndReload(text = 'Упс, сейчас обновим страницу') {
+      saveCurrentPlace();
+      const toast = document.getElementById('bottomToast');
+      if (toast) {
+        toast.textContent = text;
+        toast.classList.add('show');
+      }
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('_reload', Date.now());
+        window.location.replace(url.toString());
+      }, 900);
+    }
+
+    function softRefreshFriendWishlist() {
+      if (!currentFriend || !currentFriend.id) return;
+      return loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
     }
 
     function setAddButtonState() {
@@ -934,6 +946,7 @@
 
         currentFriendWishlist = Array.isArray(data) ? data.map(mapGift) : [];
         renderFriendWishlist();
+        restoreScrollIfNeeded();
       } catch (e) {
         container.innerHTML = '<div class="empty">Ошибка загрузки вишлиста друга</div>';
       }
@@ -987,10 +1000,6 @@
     }
 
     function renderReserveButton(item, isReserved, isReservedByMe) {
-      if (reservePending.has(String(item.id))) {
-        return `<button class="link-btn" disabled>⏳ Обновляем...</button>`;
-      }
-
       if (!isReserved) {
         return `<button class="link-btn" onclick="event.stopPropagation(); reserveGift(${item.id}, ${currentFriend.id})">🎁 Забронировать</button>`;
       }
@@ -1025,10 +1034,6 @@
     }
 
     function renderModalReserveButton(item, isReserved, isReservedByMe) {
-      if (reservePending.has(String(item.id))) {
-        return `<button class="modal-btn" disabled>⏳ Обновляем...</button>`;
-      }
-
       if (!isReserved) {
         return `<button class="modal-btn" onclick="reserveGift(${item.id}, ${currentFriend.id}); closeModal();">🎁 Забронировать</button>`;
       }
@@ -1040,119 +1045,64 @@
       return `<button class="modal-btn" disabled>✅ Занято</button>`;
     }
 
-    function findFriendGift(giftId) {
-      return currentFriendWishlist.find(g => String(g.id) === String(giftId));
-    }
-
-    function setGiftReserveLocal(giftId, reservedBy) {
-      const gift = findFriendGift(giftId);
-      if (!gift) return;
-      gift.reserved_by = reservedBy;
-      gift.is_reserved = reservedBy !== null && reservedBy !== undefined;
-      renderFriendWishlist();
-    }
-
-    async function refreshFriendWishlistAfterAction(delayMs = 350) {
-      if (!currentFriend) return;
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-      await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
-    }
-
     async function reserveGift(giftId, friendId) {
-      const pendingKey = String(giftId);
-      if (reservePending.has(pendingKey)) return;
+      if (!userId || !friendId || !giftId) return;
+      saveCurrentPlace();
 
-      const oldGift = findFriendGift(giftId);
-      const oldReservedBy = oldGift ? oldGift.reserved_by : null;
-
-      reservePending.add(pendingKey);
-      setGiftReserveLocal(giftId, Number(userId));
+      const item = currentFriendWishlist.find(g => String(g.id) === String(giftId));
+      if (item) {
+        item.reserved_by = Number(userId);
+        item.is_reserved = true;
+        renderFriendWishlist();
+      }
 
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?_=${Date.now()}`, {
+        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
           method: 'POST',
           cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: Number(userId)
-          })
+          body: JSON.stringify({ user_id: Number(userId) })
         });
 
-        const text = await res.text();
-        let data = null;
-        try { data = text ? JSON.parse(text) : null; } catch (_) {}
-
         if (!res.ok) {
-          const detail = String(data?.detail || text || '').toLowerCase();
-
-          // Не показываем страшный alert, если сервер сказал, что уже занято.
-          // Просто тихо обновляем список с сервера.
-          if (res.status === 400 && detail.includes('already reserved')) {
-            showReloadToastAndReload('Упс, сейчас обновим страницу');
-            return;
-          }
-
-          setGiftReserveLocal(giftId, oldReservedBy ?? null);
-          showReloadToastAndReload('Упс, сейчас обновим страницу');
+          // Если сервер говорит, что уже занято, не показываем страшную ошибку.
+          // Просто обновим эту же страницу друга и покажем актуальное состояние.
+          showBottomToastAndReload('Упс, сейчас обновим страницу');
           return;
         }
 
-        showBottomToast('🎁 Подарок забронирован');
-        await refreshFriendWishlistAfterAction(350);
+        await softRefreshFriendWishlist();
       } catch (e) {
-        setGiftReserveLocal(giftId, oldReservedBy ?? null);
-        showReloadToastAndReload('Упс, сейчас обновим страницу');
-      } finally {
-        reservePending.delete(pendingKey);
-        renderFriendWishlist();
+        showBottomToastAndReload('Упс, сейчас обновим страницу');
       }
     }
 
     async function unreserveGift(giftId, friendId) {
-      const pendingKey = String(giftId);
-      if (reservePending.has(pendingKey)) return;
+      if (!userId || !friendId || !giftId) return;
+      saveCurrentPlace();
 
-      const oldGift = findFriendGift(giftId);
-      const oldReservedBy = oldGift ? oldGift.reserved_by : Number(userId);
-
-      reservePending.add(pendingKey);
-      setGiftReserveLocal(giftId, null);
+      const item = currentFriendWishlist.find(g => String(g.id) === String(giftId));
+      if (item) {
+        item.reserved_by = null;
+        item.is_reserved = false;
+        renderFriendWishlist();
+      }
 
       try {
         const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`;
-
-        let res = await fetch(url, {
+        const res = await fetch(url, {
           method: 'DELETE',
           cache: 'no-store'
         });
 
-        let text = await res.text();
-
-        // Иногда после быстрого клика/перезахода сервер может не успеть обновиться.
-        // Делаем одну тихую повторную попытку, без всплывающих ошибок.
         if (!res.ok) {
-          await new Promise(resolve => setTimeout(resolve, 450));
-          res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`, {
-            method: 'DELETE',
-            cache: 'no-store'
-          });
-          text = await res.text();
-        }
-
-        if (!res.ok) {
-          setGiftReserveLocal(giftId, oldReservedBy ?? Number(userId));
-          showReloadToastAndReload('Упс, сейчас обновим страницу');
+          showBottomToastAndReload('Упс, сейчас обновим страницу');
           return;
         }
 
-        tg.showAlert('❌ Резерв снят');
-        await refreshFriendWishlistAfterAction(450);
+        await softRefreshFriendWishlist();
       } catch (e) {
-        setGiftReserveLocal(giftId, oldReservedBy ?? Number(userId));
-        showReloadToastAndReload('Упс, сейчас обновим страницу');
-      } finally {
-        reservePending.delete(pendingKey);
-        renderFriendWishlist();
+        showBottomToastAndReload('Упс, сейчас обновим страницу');
       }
     }
 
