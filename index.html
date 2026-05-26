@@ -10,22 +10,19 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --orange: #FF5A5F;
-      --orange2: #8A4DFF;
-      --orange-light: #FFF2F5;
-      --red: #FF5A5F;
-      --red-light: #FFE8EC;
+      --orange: #FF6B00;
+      --orange-light: #FFF0E5;
+      --red: #FF3B30;
+      --red-light: #FFE5E5;
       --text-dark: #1A1A1A;
       --text-gray: #666666;
       --border: #EEEEEE;
       --white: #FFFFFF;
-      --bg: #F8F5F2;
-      --main-gradient: linear-gradient(135deg, #FF5A5F 0%, #E05AAE 50%, #8A4DFF 100%);
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-      background: var(--bg);
+      background: #FEFAF5;
       padding: 16px;
       padding-bottom: 40px;
     }
@@ -56,7 +53,7 @@
     }
 
     .tab.active {
-      background: var(--main-gradient);
+      background: var(--orange);
       color: white;
     }
 
@@ -84,8 +81,8 @@
     }
 
     .file-picker-btn {
-      background: #FFF4FA;
-      color: #E05AAE;
+      background: var(--orange-light);
+      color: var(--orange);
       padding: 12px;
       border-radius: 20px;
       font-weight: 600;
@@ -95,7 +92,7 @@
       width: 100%;
       text-align: center;
       margin-bottom: 10px;
-      border: 1.5px dashed #E05AAE;
+      border: 1.5px dashed var(--orange);
     }
 
     .photo-preview {
@@ -118,7 +115,7 @@
     }
 
     .add-btn {
-      background: var(--main-gradient);
+      background: var(--orange);
       color: white;
       border: none;
       padding: 12px;
@@ -173,7 +170,7 @@
       position: absolute;
       right: 6px;
       top: 6px;
-      background: var(--main-gradient);
+      background: #34C759;
       color: #fff;
       font-size: 10px;
       font-weight: 800;
@@ -252,7 +249,7 @@
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      background: var(--main-gradient);
+      background: var(--orange);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -272,6 +269,47 @@
     .friend-info { flex: 1; }
     .friend-name { font-weight: 700; font-size: 16px; }
     .friend-username { font-size: 12px; color: var(--text-gray); }
+
+
+
+    .search-wrap {
+      margin-bottom: 16px;
+      background: var(--white);
+      border-radius: 22px;
+      padding: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .wishlist-search {
+      width: 100%;
+      margin: 0;
+      padding: 13px 14px;
+      border: 1.5px solid #F0D8E8;
+      border-radius: 18px;
+      background: #FFF8FC;
+      color: var(--text-dark);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .wishlist-search:focus {
+      border-color: #E05AAE;
+      box-shadow: 0 0 0 3px rgba(224,90,174,0.12);
+    }
+
+    .wishlist-search::placeholder {
+      color: #9B8C96;
+    }
+
+    .search-empty {
+      text-align: center;
+      padding: 28px 20px;
+      color: var(--text-gray);
+      background: var(--white);
+      border-radius: 22px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
 
     .empty, .loading {
       text-align: center;
@@ -350,7 +388,7 @@
       padding: 12px;
       font-weight: 700;
       color: white;
-      background: var(--main-gradient);
+      background: var(--orange);
       cursor: pointer;
     }
 
@@ -372,35 +410,6 @@
       font-size: 24px;
       cursor: pointer;
     }
-
-
-    .bottom-toast {
-      position: fixed;
-      left: 16px;
-      right: 16px;
-      bottom: calc(18px + env(safe-area-inset-bottom));
-      z-index: 10000;
-      display: none;
-      padding: 15px 18px;
-      border-radius: 22px;
-      color: white;
-      background: var(--main-gradient);
-      box-shadow: 0 14px 35px rgba(138, 77, 255, 0.25);
-      font-weight: 800;
-      text-align: center;
-      font-size: 15px;
-      line-height: 1.35;
-      transform: translateY(120%);
-      opacity: 0;
-      transition: transform .25s ease, opacity .25s ease;
-    }
-
-    .bottom-toast.show {
-      display: block;
-      transform: translateY(0);
-      opacity: 1;
-    }
-
   </style>
 </head>
 
@@ -431,6 +440,16 @@
       <button id="addGiftBtn" class="add-btn" onclick="addGift()">+ Добавить подарок</button>
     </div>
 
+    <div class="search-wrap" id="mySearchWrap" style="display:none;">
+      <input
+        class="wishlist-search"
+        id="mySearchInput"
+        type="text"
+        placeholder="🔎 Найти подарок в моём вишлисте"
+        oninput="onMySearchInput(this.value)"
+      >
+    </div>
+
     <div id="myList">
       <div class="loading">Загрузка...</div>
     </div>
@@ -441,8 +460,6 @@
       <div class="loading">Загрузка друзей...</div>
     </div>
   </div>
-
-  <div id="bottomToast" class="bottom-toast">Упс, сейчас обновим страницу</div>
 
   <div id="modal" class="modal" onclick="if(event.target === this) closeModal()">
     <button class="close-modal" onclick="closeModal()">×</button>
@@ -471,39 +488,19 @@
     const openedFriendId = urlParams.get('user_id');
     const openedFriendName = decodeURIComponent(urlParams.get('name') || urlParams.get('first_name') || 'Друг');
     const isDirectFriendMode = Boolean(openedFriendId) && String(openedFriendId) !== String(userId);
-    const STATE_KEY = 'wishlistMiniAppCurrentPlace';
 
     let myWishlist = [];
     let friendsList = [];
     let currentFriend = null;
     let currentFriendWishlist = [];
+    let mySearchQuery = '';
+    let friendSearchQuery = '';
     let selectedPhotoUrl = '';
     let isPhotoUploading = false;
-    let pendingScrollY = 0;
-
-    function getSavedPlace() {
-      try {
-        const raw = localStorage.getItem(STATE_KEY);
-        if (!raw) return null;
-        const data = JSON.parse(raw);
-        if (!data || Date.now() - Number(data.ts || 0) > 120000) {
-          localStorage.removeItem(STATE_KEY);
-          return null;
-        }
-        localStorage.removeItem(STATE_KEY);
-        return data;
-      } catch (e) {
-        localStorage.removeItem(STATE_KEY);
-        return null;
-      }
-    }
-
-    const savedPlace = getSavedPlace();
 
     if (!userId) {
       alert('Ошибка: открой Mini App через Telegram-бота');
     } else if (isDirectFriendMode) {
-      pendingScrollY = Number(savedPlace?.scrollY || 0);
       document.getElementById('mySection').style.display = 'none';
       document.getElementById('friendsSection').style.display = 'block';
 
@@ -512,65 +509,9 @@
       });
 
       loadFriendWishlist(Number(openedFriendId), openedFriendName, '');
-    } else if (savedPlace && savedPlace.mode === 'friend' && savedPlace.friendId) {
-      pendingScrollY = Number(savedPlace.scrollY || 0);
-      document.getElementById('mySection').style.display = 'none';
-      document.getElementById('friendsSection').style.display = 'block';
-
-      document.querySelectorAll('.tab').forEach((el, index) => {
-        el.classList.toggle('active', index === 1);
-      });
-
-      loadFriendWishlist(Number(savedPlace.friendId), savedPlace.friendName || 'Друг', savedPlace.friendUsername || '');
     } else {
       loadMyWishlist();
       loadFriendsList();
-    }
-
-
-    function saveCurrentPlace() {
-      if (currentFriend && currentFriend.id) {
-        localStorage.setItem(STATE_KEY, JSON.stringify({
-          mode: 'friend',
-          friendId: currentFriend.id,
-          friendName: currentFriend.name || 'Друг',
-          friendUsername: currentFriend.username || '',
-          scrollY: window.scrollY || document.documentElement.scrollTop || 0,
-          ts: Date.now()
-        }));
-      } else {
-        localStorage.setItem(STATE_KEY, JSON.stringify({
-          mode: 'my',
-          scrollY: window.scrollY || document.documentElement.scrollTop || 0,
-          ts: Date.now()
-        }));
-      }
-    }
-
-    function restoreScrollIfNeeded() {
-      if (!pendingScrollY) return;
-      const y = pendingScrollY;
-      pendingScrollY = 0;
-      setTimeout(() => window.scrollTo({ top: y, behavior: 'instant' }), 120);
-    }
-
-    function showBottomToastAndReload(text = 'Упс, сейчас обновим страницу') {
-      saveCurrentPlace();
-      const toast = document.getElementById('bottomToast');
-      if (toast) {
-        toast.textContent = text;
-        toast.classList.add('show');
-      }
-      setTimeout(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('_reload', Date.now());
-        window.location.replace(url.toString());
-      }, 900);
-    }
-
-    function softRefreshFriendWishlist() {
-      if (!currentFriend || !currentFriend.id) return;
-      return loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
     }
 
     function setAddButtonState() {
@@ -756,6 +697,39 @@
       }
     }
 
+
+
+    function normalizeText(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replaceAll('ё', 'е')
+        .trim();
+    }
+
+    function giftMatchesSearch(item, query) {
+      const q = normalizeText(query);
+      if (!q) return true;
+
+      const searchableText = [
+        item.name,
+        item.description,
+        item.price,
+        item.link
+      ].map(normalizeText).join(' ');
+
+      return searchableText.includes(q);
+    }
+
+    function onMySearchInput(value) {
+      mySearchQuery = value || '';
+      renderMyWishlist();
+    }
+
+    function onFriendSearchInput(value) {
+      friendSearchQuery = value || '';
+      renderFriendWishlist();
+    }
+
     function mapGift(item) {
       return {
         id: item.id,
@@ -771,15 +745,33 @@
 
     function renderMyWishlist() {
       const container = document.getElementById('myList');
+      const searchWrap = document.getElementById('mySearchWrap');
+      const searchInput = document.getElementById('mySearchInput');
+
+      if (searchInput && document.activeElement !== searchInput) {
+        searchInput.value = mySearchQuery;
+      }
 
       if (!myWishlist.length) {
+        if (searchWrap) searchWrap.style.display = 'none';
         container.innerHTML = '<div class="empty">🎄 Пока нет подарков</div>';
         return;
       }
 
-      container.innerHTML = myWishlist.map((item, index) => `
+      if (searchWrap) searchWrap.style.display = 'block';
+
+      const filteredWishlist = myWishlist
+        .map((item, originalIndex) => ({ item, originalIndex }))
+        .filter(({ item }) => giftMatchesSearch(item, mySearchQuery));
+
+      if (!filteredWishlist.length) {
+        container.innerHTML = '<div class="search-empty">🔎 Ничего не найдено</div>';
+        return;
+      }
+
+      container.innerHTML = filteredWishlist.map(({ item, originalIndex }) => `
         <div class="gift-card">
-          <div class="gift-card-content" onclick="openMyModal(${index})">
+          <div class="gift-card-content" onclick="openMyModal(${originalIndex})">
             <div class="gift-image">
               ${renderGiftImage(item)}
             </div>
@@ -792,7 +784,7 @@
 
               <div class="gift-actions">
                 ${item.link ? `<button class="link-btn" onclick="event.stopPropagation(); openLink('${escapeAttr(item.link)}')">🛒 Перейти</button>` : ''}
-                <button class="delete-btn" onclick="event.stopPropagation(); deleteGift(${item.id}, ${index})">🗑 Удалить</button>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteGift(${item.id}, ${originalIndex})">🗑 Удалить</button>
               </div>
             </div>
           </div>
@@ -913,6 +905,10 @@
     }
 
     async function loadFriendWishlist(friendId, friendName, friendUsername) {
+      if (!currentFriend || String(currentFriend.id) !== String(friendId)) {
+        friendSearchQuery = '';
+      }
+
       currentFriend = {
         id: friendId,
         name: friendName || 'Друг',
@@ -946,7 +942,6 @@
 
         currentFriendWishlist = Array.isArray(data) ? data.map(mapGift) : [];
         renderFriendWishlist();
-        restoreScrollIfNeeded();
       } catch (e) {
         container.innerHTML = '<div class="empty">Ошибка загрузки вишлиста друга</div>';
       }
@@ -954,26 +949,44 @@
 
     function renderFriendWishlist() {
       const container = document.getElementById('friendsList');
+      const backButtonText = isDirectFriendMode ? '← Мои подарки' : '← Назад к друзьям';
+      const searchBlock = `
+        <div class="search-wrap">
+          <input
+            class="wishlist-search"
+            id="friendSearchInput"
+            type="text"
+            value="${escapeAttr(friendSearchQuery)}"
+            placeholder="🔎 Найти подарок у ${escapeAttr(currentFriend?.name || 'друга')}"
+            oninput="onFriendSearchInput(this.value)"
+          >
+        </div>
+      `;
 
       if (!currentFriendWishlist.length) {
         container.innerHTML = `
-          <button class="add-btn" onclick="backToFriends()">${isDirectFriendMode ? '← Мои подарки' : '← Назад к друзьям'}</button>
+          <button class="add-btn" onclick="backToFriends()">${backButtonText}</button>
           <div class="empty">🎁 У ${escapeHtml(currentFriend.name)} пока нет подарков</div>
         `;
         return;
       }
 
-      container.innerHTML = `
-        <button class="add-btn" style="margin-bottom:16px;" onclick="backToFriends()">${isDirectFriendMode ? '← Мои подарки' : '← Назад к друзьям'}</button>
+      const filteredWishlist = currentFriendWishlist
+        .map((item, originalIndex) => ({ item, originalIndex }))
+        .filter(({ item }) => giftMatchesSearch(item, friendSearchQuery));
 
-        ${currentFriendWishlist.map((item, index) => {
+      container.innerHTML = `
+        <button class="add-btn" style="margin-bottom:16px;" onclick="backToFriends()">${backButtonText}</button>
+        ${searchBlock}
+
+        ${!filteredWishlist.length ? '<div class="search-empty">🔎 Ничего не найдено</div>' : filteredWishlist.map(({ item, originalIndex }) => {
           const isReservedByMe = String(item.reserved_by) === String(userId);
           const isReservedByOther = item.reserved_by !== null && item.reserved_by !== undefined && String(item.reserved_by) !== String(userId);
           const isReserved = isReservedByMe || isReservedByOther;
 
           return `
             <div class="gift-card">
-              <div class="gift-card-content" onclick="openFriendModal(${index})">
+              <div class="gift-card-content" onclick="openFriendModal(${originalIndex})">
                 <div class="gift-image">
                   ${renderGiftImage(item, isReservedByMe ? 'Ваш резерв' : isReservedByOther ? 'Занято' : '')}
                 </div>
@@ -1046,63 +1059,56 @@
     }
 
     async function reserveGift(giftId, friendId) {
-      if (!userId || !friendId || !giftId) return;
-      saveCurrentPlace();
-
-      const item = currentFriendWishlist.find(g => String(g.id) === String(giftId));
-      if (item) {
-        item.reserved_by = Number(userId);
-        item.is_reserved = true;
-        renderFriendWishlist();
-      }
-
       try {
         const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
           method: 'POST',
           cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: Number(userId) })
+          body: JSON.stringify({
+            user_id: Number(userId)
+          })
         });
 
+        const text = await res.text();
+
         if (!res.ok) {
-          // Если сервер говорит, что уже занято, не показываем страшную ошибку.
-          // Просто обновим эту же страницу друга и покажем актуальное состояние.
-          showBottomToastAndReload('Упс, сейчас обновим страницу');
+          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
           return;
         }
 
-        await softRefreshFriendWishlist();
+        tg.showAlert('🎁 Подарок забронирован');
+
+        await loadFriendWishlist(
+          currentFriend.id,
+          currentFriend.name,
+          currentFriend.username
+        );
       } catch (e) {
-        showBottomToastAndReload('Упс, сейчас обновим страницу');
+        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
     }
 
     async function unreserveGift(giftId, friendId) {
-      if (!userId || !friendId || !giftId) return;
-      saveCurrentPlace();
-
-      const item = currentFriendWishlist.find(g => String(g.id) === String(giftId));
-      if (item) {
-        item.reserved_by = null;
-        item.is_reserved = false;
-        renderFriendWishlist();
-      }
-
       try {
         const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`;
+
         const res = await fetch(url, {
           method: 'DELETE',
           cache: 'no-store'
         });
 
+        const text = await res.text();
+
         if (!res.ok) {
-          showBottomToastAndReload('Упс, сейчас обновим страницу');
+          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
           return;
         }
 
-        await softRefreshFriendWishlist();
+        tg.showAlert('❌ Резерв снят');
+
+        await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
       } catch (e) {
-        showBottomToastAndReload('Упс, сейчас обновим страницу');
+        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
       }
     }
 
