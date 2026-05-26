@@ -10,19 +10,23 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --orange: #FF6B00;
-      --orange-light: #FFF0E5;
-      --red: #FF3B30;
-      --red-light: #FFE5E5;
+      /* Палитра под логотип: коралловый → розовый → фиолетовый */
+      --orange: #FF5A5F;
+      --orange2: #8A4DFF;
+      --orange-light: #FFF2F5;
+      --red: #FF5A5F;
+      --red-light: #FFE8EC;
       --text-dark: #1A1A1A;
       --text-gray: #666666;
       --border: #EEEEEE;
       --white: #FFFFFF;
+      --bg: #F8F5F2;
+      --main-gradient: linear-gradient(135deg, #FF5A5F 0%, #E05AAE 50%, #8A4DFF 100%);
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-      background: #FEFAF5;
+      background: var(--bg);
       padding: 16px;
       padding-bottom: 40px;
     }
@@ -53,8 +57,9 @@
     }
 
     .tab.active {
-      background: var(--orange);
+      background: var(--main-gradient);
       color: white;
+      box-shadow: 0 4px 14px rgba(224, 90, 174, 0.28);
     }
 
     .add-form {
@@ -81,8 +86,8 @@
     }
 
     .file-picker-btn {
-      background: var(--orange-light);
-      color: var(--orange);
+      background: #FFF4FA;
+      color: #E05AAE;
       padding: 12px;
       border-radius: 20px;
       font-weight: 600;
@@ -92,7 +97,7 @@
       width: 100%;
       text-align: center;
       margin-bottom: 10px;
-      border: 1.5px dashed var(--orange);
+      border: 1.5px dashed #E05AAE;
     }
 
     .photo-preview {
@@ -115,7 +120,7 @@
     }
 
     .add-btn {
-      background: var(--orange);
+      background: var(--main-gradient);
       color: white;
       border: none;
       padding: 12px;
@@ -170,7 +175,7 @@
       position: absolute;
       right: 6px;
       top: 6px;
-      background: #34C759;
+      background: var(--main-gradient);
       color: #fff;
       font-size: 10px;
       font-weight: 800;
@@ -249,7 +254,7 @@
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      background: var(--orange);
+      background: var(--main-gradient);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -347,7 +352,7 @@
       padding: 12px;
       font-weight: 700;
       color: white;
-      background: var(--orange);
+      background: var(--main-gradient);
       cursor: pointer;
     }
 
