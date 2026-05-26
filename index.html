@@ -449,6 +449,7 @@
     let currentFriendWishlist = [];
     let selectedPhotoUrl = '';
     let isPhotoUploading = false;
+    const reservePending = new Set();
 
     if (!userId) {
       alert('Ошибка: открой Mini App через Telegram-бота');
@@ -892,6 +893,10 @@
     }
 
     function renderReserveButton(item, isReserved, isReservedByMe) {
+      if (reservePending.has(String(item.id))) {
+        return `<button class="link-btn" disabled>⏳ Обновляем...</button>`;
+      }
+
       if (!isReserved) {
         return `<button class="link-btn" onclick="event.stopPropagation(); reserveGift(${item.id}, ${currentFriend.id})">🎁 Забронировать</button>`;
       }
@@ -926,6 +931,10 @@
     }
 
     function renderModalReserveButton(item, isReserved, isReservedByMe) {
+      if (reservePending.has(String(item.id))) {
+        return `<button class="modal-btn" disabled>⏳ Обновляем...</button>`;
+      }
+
       if (!isReserved) {
         return `<button class="modal-btn" onclick="reserveGift(${item.id}, ${currentFriend.id}); closeModal();">🎁 Забронировать</button>`;
       }
@@ -937,9 +946,36 @@
       return `<button class="modal-btn" disabled>✅ Занято</button>`;
     }
 
+    function findFriendGift(giftId) {
+      return currentFriendWishlist.find(g => String(g.id) === String(giftId));
+    }
+
+    function setGiftReserveLocal(giftId, reservedBy) {
+      const gift = findFriendGift(giftId);
+      if (!gift) return;
+      gift.reserved_by = reservedBy;
+      gift.is_reserved = reservedBy !== null && reservedBy !== undefined;
+      renderFriendWishlist();
+    }
+
+    async function refreshFriendWishlistAfterAction(delayMs = 350) {
+      if (!currentFriend) return;
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
+    }
+
     async function reserveGift(giftId, friendId) {
+      const pendingKey = String(giftId);
+      if (reservePending.has(pendingKey)) return;
+
+      const oldGift = findFriendGift(giftId);
+      const oldReservedBy = oldGift ? oldGift.reserved_by : null;
+
+      reservePending.add(pendingKey);
+      setGiftReserveLocal(giftId, Number(userId));
+
       try {
-        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve`, {
+        const res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?_=${Date.now()}`, {
           method: 'POST',
           cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
@@ -949,45 +985,80 @@
         });
 
         const text = await res.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (_) {}
 
         if (!res.ok) {
-          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
+          const detail = String(data?.detail || text || '').toLowerCase();
+
+          // Не показываем страшный alert, если сервер сказал, что уже занято.
+          // Просто тихо обновляем список с сервера.
+          if (res.status === 400 && detail.includes('already reserved')) {
+            await refreshFriendWishlistAfterAction(450);
+            return;
+          }
+
+          setGiftReserveLocal(giftId, oldReservedBy ?? null);
+          tg.showAlert('Не получилось забронировать. Попробуй ещё раз.');
           return;
         }
 
         tg.showAlert('🎁 Подарок забронирован');
-
-        await loadFriendWishlist(
-          currentFriend.id,
-          currentFriend.name,
-          currentFriend.username
-        );
+        await refreshFriendWishlistAfterAction(350);
       } catch (e) {
-        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
+        setGiftReserveLocal(giftId, oldReservedBy ?? null);
+        tg.showAlert('Ошибка сети. Попробуй ещё раз.');
+      } finally {
+        reservePending.delete(pendingKey);
+        renderFriendWishlist();
       }
     }
 
     async function unreserveGift(giftId, friendId) {
+      const pendingKey = String(giftId);
+      if (reservePending.has(pendingKey)) return;
+
+      const oldGift = findFriendGift(giftId);
+      const oldReservedBy = oldGift ? oldGift.reserved_by : Number(userId);
+
+      reservePending.add(pendingKey);
+      setGiftReserveLocal(giftId, null);
+
       try {
         const url = `${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`;
 
-        const res = await fetch(url, {
+        let res = await fetch(url, {
           method: 'DELETE',
           cache: 'no-store'
         });
 
-        const text = await res.text();
+        let text = await res.text();
+
+        // Иногда после быстрого клика/перезахода сервер может не успеть обновиться.
+        // Делаем одну тихую повторную попытку, без всплывающих ошибок.
+        if (!res.ok) {
+          await new Promise(resolve => setTimeout(resolve, 450));
+          res = await fetch(`${API_BASE}/wishlist/${friendId}/${giftId}/reserve?user_id=${Number(userId)}&_=${Date.now()}`, {
+            method: 'DELETE',
+            cache: 'no-store'
+          });
+          text = await res.text();
+        }
 
         if (!res.ok) {
-          alert('STATUS: ' + res.status + '\nANSWER: ' + text);
+          setGiftReserveLocal(giftId, oldReservedBy ?? Number(userId));
+          tg.showAlert('Не получилось снять резерв. Попробуй ещё раз.');
           return;
         }
 
         tg.showAlert('❌ Резерв снят');
-
-        await loadFriendWishlist(currentFriend.id, currentFriend.name, currentFriend.username);
+        await refreshFriendWishlistAfterAction(450);
       } catch (e) {
-        alert('FETCH ERROR: ' + e.name + '\n' + e.message);
+        setGiftReserveLocal(giftId, oldReservedBy ?? Number(userId));
+        tg.showAlert('Ошибка сети. Попробуй ещё раз.');
+      } finally {
+        reservePending.delete(pendingKey);
+        renderFriendWishlist();
       }
     }
 
