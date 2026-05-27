@@ -1095,7 +1095,7 @@
               Добавьте друзей, чтобы смотреть их вишлисты<br>
               и планировать подарки вместе
             </div>
-            <button class="add-friend-btn" onclick="tg.showAlert('Функция добавления друзей скоро будет')">+ Добавить друга</button>
+            <button class="add-friend-btn" onclick="openBotFriends()">+ Добавить друга</button>
           </div>
         `;
         return;
@@ -1667,6 +1667,21 @@
     function escapeAttr(value) {
       return escapeHtml(value);
     }
+
+    function openBotFriends() {
+      const url = 'https://t.me/EasyBirthday_Bot?start=friends';
+
+      try {
+        if (window.Telegram?.WebApp?.openTelegramLink) {
+          window.Telegram.WebApp.openTelegramLink(url);
+        } else {
+          window.location.href = url;
+        }
+      } catch (e) {
+        window.location.href = url;
+      }
+    }
+
   </script>
 </body>
 </html>
