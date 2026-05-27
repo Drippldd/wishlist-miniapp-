@@ -1677,6 +1677,16 @@
         } else {
           window.location.href = url;
         }
+
+        setTimeout(() => {
+          try {
+            if (window.Telegram?.WebApp?.close) {
+              window.Telegram.WebApp.close();
+            }
+          } catch (e) {
+            console.log(e);
+          }
+        }, 250);
       } catch (e) {
         window.location.href = url;
       }
